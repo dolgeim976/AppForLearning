@@ -84,8 +84,20 @@ function App() {
     return (
         <div className="flex h-screen w-full bg-[#0b1120] text-white font-sans overflow-hidden">
 
+            {/* Мобильная подложка (Overlay) для закрытия сайдбара по клику вне его */}
+            {!sidebarCollapsed && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-20 md:hidden"
+                    onClick={() => setSidebarCollapsed(true)}
+                />
+            )}
+
             {/* ШАГ 1: Левый сайдбар со списком всех треков */}
-            <div className={`h-full border-r border-gray-800 bg-gray-950 flex flex-col z-20 shadow-2xl shrink-0 transition-all duration-300 ${sidebarCollapsed ? 'w-14' : 'w-64'}`}>
+            <div className={`
+                ${sidebarCollapsed ? '-translate-x-full md:translate-x-0 w-0 md:w-14 shrink-0' : 'translate-x-0 w-64 shrink-0'} 
+                absolute md:static inset-y-0 left-0 
+                h-full border-r border-gray-800 bg-gray-950 flex flex-col z-30 shadow-2xl transition-all duration-300
+            `}>
                 <div className="p-3 border-b border-gray-800 flex items-center justify-between">
                     {!sidebarCollapsed && (
                         <div className="flex items-center gap-3 pl-2">
@@ -95,7 +107,7 @@ function App() {
                     )}
                     <button
                         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors mx-auto"
+                        className={`p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors ${sidebarCollapsed ? 'mx-auto hidden md:block' : ''}`}
                         title={sidebarCollapsed ? 'Развернуть' : 'Свернуть'}
                     >
                         {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -113,7 +125,7 @@ function App() {
                                 tracks.map(track => (
                                     <div
                                         key={track.id}
-                                        onClick={() => setActiveTrackId(track.id || null)}
+                                        onClick={() => { setActiveTrackId(track.id || null); setSidebarCollapsed(true); }}
                                         className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all border group
                                             ${activeTrackId === track.id ? 'bg-blue-600/10 border-blue-500/50 text-blue-400' : 'bg-transparent border-transparent text-gray-400 hover:bg-gray-800 hover:text-gray-200'}`}
                                     >
@@ -133,7 +145,7 @@ function App() {
                         <div className="p-4 border-t border-gray-800 space-y-2">
                             {/* SRS Review Button */}
                             <button
-                                onClick={() => { setShowReview(true); refreshSrsStats(); }}
+                                onClick={() => { setShowReview(true); refreshSrsStats(); setSidebarCollapsed(true); }}
                                 className={`w-full py-3 px-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg relative
                                     ${showReview ? 'bg-purple-600 text-white shadow-purple-500/20' : 'bg-gradient-to-r from-purple-900/50 to-indigo-900/50 text-purple-300 border border-purple-700/30 hover:from-purple-800/50 hover:to-indigo-800/50'}`}
                             >
@@ -147,7 +159,7 @@ function App() {
                             </button>
 
                             <button
-                                onClick={() => { setActiveTrackId(null); setShowReview(false); }}
+                                onClick={() => { setActiveTrackId(null); setShowReview(false); setSidebarCollapsed(true); }}
                                 className={`w-full py-3 px-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg
                                     ${!activeTrackId && !showReview ? 'bg-blue-600 text-white shadow-blue-500/20' : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white'}`}
                             >
@@ -158,6 +170,16 @@ function App() {
                     </>
                 )}
             </div>
+
+            {/* Мобильная кнопка Гамбургер (чтобы открыть меню, когда оно скрыто) */}
+            {sidebarCollapsed && (
+                <button
+                    onClick={() => setSidebarCollapsed(false)}
+                    className="md:hidden absolute top-4 left-4 z-10 p-2 bg-gray-800/80 backdrop-blur text-white rounded-lg shadow-lg border border-gray-700"
+                >
+                    <Library className="w-5 h-5" />
+                </button>
+            )}
 
             {/* ШАГ 2: Основная контентная часть */}
             <div className="flex-1 h-full relative">
@@ -217,7 +239,6 @@ function App() {
                     </div>
                 )}
             </div>
-
         </div>
     );
 }
