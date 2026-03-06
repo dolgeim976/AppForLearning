@@ -49,6 +49,13 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({ srsEngine, onClose
             ? Math.round((sessionResults.correct / (sessionResults.correct + sessionResults.incorrect)) * 100)
             : 0;
 
+        const handleReset = () => {
+            if (window.confirm('Вы уверены, что хотите сбросить весь прогресс повторений? Это действие нельзя отменить.')) {
+                srsEngine.clearAll();
+                onClose();
+            }
+        };
+
         return (
             <div className="h-full flex flex-col items-center justify-center p-8 animate-in fade-in duration-500">
                 <div className="max-w-md w-full text-center">
@@ -57,27 +64,39 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({ srsEngine, onClose
                         {dueCards.length === 0 ? 'Нет карточек для повторения!' : 'Сессия завершена!'}
                     </h2>
 
-                    {dueCards.length > 0 && (
+                    {stats.total > 0 && (
                         <>
-                            <p className="text-gray-400 mb-8">Отличная работа! Вот ваши результаты:</p>
+                            {dueCards.length > 0 && (
+                                <>
+                                    <p className="text-gray-400 mb-8">Отличная работа! Вот ваши результаты:</p>
 
-                            <div className="grid grid-cols-3 gap-4 mb-8">
-                                <div className="bg-emerald-900/30 rounded-2xl p-4 border border-emerald-700/30">
-                                    <div className="text-2xl font-bold text-emerald-400">{sessionResults.correct}</div>
-                                    <div className="text-xs text-emerald-500 mt-1">Правильно</div>
-                                </div>
-                                <div className="bg-rose-900/30 rounded-2xl p-4 border border-rose-700/30">
-                                    <div className="text-2xl font-bold text-rose-400">{sessionResults.incorrect}</div>
-                                    <div className="text-xs text-rose-500 mt-1">Неправильно</div>
-                                </div>
-                                <div className="bg-blue-900/30 rounded-2xl p-4 border border-blue-700/30">
-                                    <div className="text-2xl font-bold text-blue-400">{accuracy}%</div>
-                                    <div className="text-xs text-blue-500 mt-1">Точность</div>
-                                </div>
-                            </div>
+                                    <div className="grid grid-cols-3 gap-4 mb-8">
+                                        <div className="bg-emerald-900/30 rounded-2xl p-4 border border-emerald-700/30">
+                                            <div className="text-2xl font-bold text-emerald-400">{sessionResults.correct}</div>
+                                            <div className="text-xs text-emerald-500 mt-1">Правильно</div>
+                                        </div>
+                                        <div className="bg-rose-900/30 rounded-2xl p-4 border border-rose-700/30">
+                                            <div className="text-2xl font-bold text-rose-400">{sessionResults.incorrect}</div>
+                                            <div className="text-xs text-rose-500 mt-1">Неправильно</div>
+                                        </div>
+                                        <div className="bg-blue-900/30 rounded-2xl p-4 border border-blue-700/30">
+                                            <div className="text-2xl font-bold text-blue-400">{accuracy}%</div>
+                                            <div className="text-xs text-blue-500 mt-1">Точность</div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
 
-                            <div className="bg-gray-800/50 rounded-xl p-4 mb-8 text-sm text-gray-400">
-                                📊 Всего карточек: {stats.total} • Освоено: {stats.mastered} • На изучении: {stats.learning}
+                            <div className="bg-gray-800/50 rounded-xl p-4 mb-8 text-sm text-gray-400 flex flex-col gap-2">
+                                <div>
+                                    📊 Всего карточек: {stats.total} • Освоено: {stats.mastered} • На изучении: {stats.learning}
+                                </div>
+                                <button
+                                    onClick={handleReset}
+                                    className="text-rose-400 hover:text-rose-300 transition-colors mt-2 underline decoration-rose-500/30 underline-offset-4"
+                                >
+                                    Сбросить весь прогресс повторений
+                                </button>
                             </div>
                         </>
                     )}

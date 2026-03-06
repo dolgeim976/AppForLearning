@@ -37,12 +37,18 @@ export class SRSEngine {
     private cards: SRSCard[] = [];
 
     constructor() {
-        // No persistence — cards are in-memory only
-        // They get regenerated from quiz questions when tracks are added
+        const saved = localStorage.getItem('ai_learning_srs_deck');
+        if (saved) {
+            try {
+                this.cards = JSON.parse(saved);
+            } catch (e) {
+                console.error('Failed to load SRS deck', e);
+            }
+        }
     }
 
     private saveCards(): void {
-        // in-memory only, no persistence
+        localStorage.setItem('ai_learning_srs_deck', JSON.stringify(this.cards));
     }
 
     /** Import quiz questions from a track as SRS cards */
@@ -60,7 +66,11 @@ export class SRSEngine {
         const today = new Date().toISOString().split('T')[0];
 
         for (const node of nodes) {
+            if (!node.active_recall_questions || !Array.isArray(node.active_recall_questions)) continue;
+
             for (const q of node.active_recall_questions) {
+                if (!q.question || !q.options || q.options.length < 2) continue;
+
                 const cardId = `${trackId}_${node.title}_${q.question}`.substring(0, 120);
 
                 // Skip if already exists
@@ -145,6 +155,12 @@ export class SRSEngine {
     /** Clear all cards for a track */
     clearTrack(trackId: string): void {
         this.cards = this.cards.filter(c => c.trackId !== trackId);
+        this.saveCards();
+    }
+
+    /** Clear ALL cards (Global Reset) */
+    clearAll(): void {
+        this.cards = [];
         this.saveCards();
     }
 
