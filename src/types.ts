@@ -28,6 +28,13 @@ export const FinalBossPracticeSchema = z.object({
     correct_sequence: z.array(z.string()),
     distractors: z.array(z.string())
 });
+export const PracticeTaskSchema = z.object({
+    title: z.string(),
+    mission: z.string().describe("Описание задачи"),
+    starter_code: z.string().describe("Начальный код для студента (может быть с пробелами '___')"),
+    solution_code: z.string().describe("Правильное решение"),
+    explanation: z.string().describe("Объяснение решения")
+});
 
 export const RoadmapNodeSchema = z.object({
     id: z.string().optional(),
@@ -41,7 +48,8 @@ export const RoadmapNodeSchema = z.object({
         mission: "Practice task",
         correct_sequence: [],
         distractors: []
-    })
+    }),
+    practice_task: PracticeTaskSchema.optional()
 });
 
 export const TrackRoadmapSchema = z.object({

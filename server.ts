@@ -154,25 +154,14 @@ function repairAndParse(text: string): any {
     throw new Error('Не удалось починить JSON после 50 попыток');
 }
 
-const OUTLINE_PROMPT = `You are an expert Technical Curriculum Designer.
-Your task is to break down the provided topic into a list of 1 to 4 core sequential subtopics that form a complete learning path. 
-For simple or narrow topics, use only 1 or 2 subtopics to avoid repetition.
-ALL GENERATED TEXT MUST BE WRITTEN IN RUSSIAN.
-Return ONLY a valid JSON object with the following structure:
-{
-    "topic": "The confirmed topic name (in Russian)",
-    "subtopics": ["Subtopic 1 (in Russian)", "Subtopic 2 (in Russian)"]
-}
-Do NOT wrap the output in markdown backticks. Return raw JSON.`;
-
-function getNodePrompt(topic: string, subtopic: string): string {
-    return `You are a Senior EdTech Professor and Expert in Cognitive Psychology. You are generating a highly structured learning module for the subtopic "${subtopic}" (part of "${topic}").
+function getSingleNodePrompt(topic: string): string {
+    return `You are a Senior EdTech Professor and Expert in Cognitive Psychology. You are generating a highly structured, comprehensive learning module for the topic "${topic}".
 ALL TEXT CONTENT MUST BE STRICTLY IN RUSSIAN.
 IMPORTANT: Do NOT translate the enum values for "type" or JSON keys.
 Return ONLY a valid JSON object matching this EXACT structure. Use rich Markdown in text fields where appropriate. Do NOT wrap the output in markdown backticks. Return raw JSON.
 
 {
-  "title": "Название подтемы на русском",
+  "title": "Название темы на русском",
   "day": 1,
   "topic": "Название темы",
   "narrative_hook": {
@@ -205,6 +194,13 @@ Return ONLY a valid JSON object matching this EXACT structure. Use rich Markdown
       }
     }
   ],
+  "practice_task": {
+    "title": "Практическая задача",
+    "mission": "Описание задачи. Что нужно сделать студенту написать код или исправить.",
+    "starter_code": "Начальный код для студента (может быть с комментариями TODO).",
+    "solution_code": "Правильное решение",
+    "explanation": "Объяснение решения"
+  },
   "final_boss_practice": {
     "type": "parsons_problem",
     "mission": "Write a mission description here for assembling the final solution.",
@@ -220,7 +216,7 @@ Return ONLY a valid JSON object matching this EXACT structure. Use rich Markdown
   }
 }
 
-Include 1 to 4 micro_loops in the array, depending on the complexity of the topic to prevent repetition.`;
+Include 3 to 6 micro_loops in the array, making sure there is a good mix of 'predict_output' and 'spot_the_bug'. Cover the entire topic comprehensively in this single JSON response.`;
 }
 
 async function callOpenRouter(messages: any[], model: string = "openai/gpt-4o-mini"): Promise<string> {
@@ -255,82 +251,29 @@ app.post('/api/llm/generate', async (req, res) => {
             return res.status(500).json({ error: 'OPENROUTER_API_KEY is not configured in .env' });
         }
 
-        console.log(`[Backend] 🚀 Starting Agentic generation for topic: ${topic}`);
+        console.log(`[Backend] 🚀 Starting Single-Node generation for topic: ${topic}`);
 
-        // STEP 1: Fetch Outline
-        const outlineMessages = [
-            { "role": "system", "content": OUTLINE_PROMPT },
-            { "role": "user", "content": `Create a curriculum outline for: ${topic}` }
+        const prompt = getSingleNodePrompt(topic);
+        const messages = [
+            { "role": "system", "content": prompt },
+            { "role": "user", "content": `Generate a comprehensive curriculum module for: ${topic}` }
         ];
 
-        console.log(`[Backend] \t➔ Fetching Outline...`);
-        let outlineRaw = await callOpenRouter(outlineMessages, "openai/gpt-4o-mini");
-        outlineRaw = sanitizeLLMJson(outlineRaw);
+        let nodeContent = await callOpenRouter(messages, "openai/gpt-4o-mini");
+        nodeContent = sanitizeLLMJson(nodeContent);
+        let parsedNode = repairAndParse(nodeContent);
 
-        let outlineData;
-        try {
-            outlineData = repairAndParse(outlineRaw);
-        } catch (e) {
-            console.error('[Backend] Outline parsing failed, falling back to regex...', e);
-            // Fallback parsing if LLM sends raw array or weird format
-            const foundTopics = outlineRaw.match(/"([^"]+)"/g);
-            outlineData = {
-                topic: topic,
-                subtopics: foundTopics ? foundTopics.map(s => s.replace(/"/g, '')) : ["Basic Concepts", "Advanced Usage"]
-            };
-        }
+        // Ensure arrays exist
+        parsedNode.day = 1;
+        if (!Array.isArray(parsedNode.micro_loops)) parsedNode.micro_loops = [];
 
-        const subtopics = Array.isArray(outlineData.subtopics) && outlineData.subtopics.length > 0
-            ? outlineData.subtopics.slice(0, 4)
-            : ["Основы", "Практическое применение"];
-
-        console.log(`[Backend] \t➔ Outline generated: [${subtopics.join(', ')}]`);
-        console.log(`[Backend] \t➔ Dispatching ${subtopics.length} parallel requests...`);
-
-        // STEP 2: Fetch Nodes in Parallel
-        const nodePromises = subtopics.map(async (subtopic: string, index: number) => {
-            const prompt = getNodePrompt(outlineData.topic || topic, subtopic);
-            const messages = [
-                { "role": "system", "content": prompt },
-                { "role": "user", "content": `Generate detailed content for: ${subtopic}` }
-            ];
-
-            try {
-                let nodeContent = await callOpenRouter(messages, "openai/gpt-4o-mini");
-                nodeContent = sanitizeLLMJson(nodeContent);
-                let parsedNode = repairAndParse(nodeContent);
-
-                // Ensure `day` exists
-                if (!parsedNode.day) parsedNode.day = index + 1;
-
-                // Ensure arrays exist for micro_loops just in case
-                if (!Array.isArray(parsedNode.micro_loops)) parsedNode.micro_loops = [];
-
-                console.log(`[Backend] \t\t🟢 Node ${index + 1}/${subtopics.length} completed: ${subtopic}`);
-                return parsedNode;
-            } catch (err: any) {
-                console.error(`[Backend] \t\t🔴 Node ${index + 1} failed (${subtopic}):`, err.message);
-                return null;
-            }
-        });
-
-        const parallelResults = await Promise.all(nodePromises);
-
-        // Filter out any failed nodes
-        const successfulNodes = parallelResults.filter(node => node && node.title && Array.isArray(node.micro_loops));
-
-        if (successfulNodes.length === 0) {
-            throw new Error('All parallel node generations failed.');
-        }
-
-        // Assemble Final JSON
+        // Assembly
         const finalJson = {
-            topic: outlineData.topic || topic,
-            roadmap_nodes: successfulNodes
+            topic: topic,
+            roadmap_nodes: [parsedNode]
         };
 
-        console.log(`[Backend] ✅ Assembly complete. Successfully generated ${successfulNodes.length} nodes.`);
-
+        console.log(`[Backend] ✅ Generation complete for ${topic}`);
         return res.json(finalJson);
 
     } catch (error: any) {

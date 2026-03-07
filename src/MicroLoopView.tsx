@@ -67,7 +67,7 @@ export const MicroLoopView: React.FC<{ loop: MicroLoop; index: number }> = ({ lo
                         </div>
                         {isSpotBug ? (
                             <div className="bg-[#0d1321] p-2 text-sm font-mono text-gray-300 overflow-x-auto leading-relaxed whitespace-pre-wrap">
-                                {fc.code_block.split('\\n').map((line, idx) => {
+                                {fc.code_block.split(/\\r?\\n|\\\\n/).map((line, idx) => {
                                     // Parse line number if it starts with "1. " format
                                     let lineStr = line;
                                     const match = line.match(/^(\\d+)\\.\\s(.*)/);
