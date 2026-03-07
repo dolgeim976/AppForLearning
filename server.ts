@@ -155,42 +155,44 @@ function repairAndParse(text: string): any {
 }
 
 const OUTLINE_PROMPT = `You are an expert Technical Curriculum Designer.
-Your task is to break down the provided topic into a list of 3 to 6 core sequential subtopics that form a complete learning path.
+Your task is to break down the provided topic into a list of 3 to 6 core sequential subtopics that form a complete learning path. 
+ALL GENERATED TEXT (topic headers, descriptions) MUST BE WRITTEN IN RUSSIAN.
 Return ONLY a valid JSON object with the following structure:
 {
-    "topic": "The confirmed topic name",
-    "subtopics": ["Subtopic 1", "Subtopic 2", "Subtopic 3"]
+    "topic": "The confirmed topic name (in Russian)",
+    "subtopics": ["Subtopic 1 (in Russian)", "Subtopic 2 (in Russian)", "Subtopic 3 (in Russian)"]
 }
 Do NOT wrap the output in markdown backticks. Return raw JSON.`;
 
 function getNodePrompt(topic: string, subtopic: string): string {
     return `You are a Senior Technical Instructor. You are writing exhaustive, high-quality content for the subtopic "${subtopic}", which belongs to the overarching topic "${topic}".
+ALL TEXT CONTENT, THEORY, INSTRUCTIONS, QUESTIONS AND CODE COMMENTS MUST BE WRITTEN STRICTLY IN RUSSIAN.
 Return ONLY a valid JSON object matching this EXACT structure. Provide extensive detail in detailed_theory using rich Markdown.
 {
-    "title": "${subtopic}",
+    "title": "Название подтемы на русском",
     "day": 1,
-    "narrative_hook": "A short, engaging hook.",
-    "analogy": "A real-world analogy to explain the concept without code.",
-    "detailed_theory": "A massive, deep explanation of this concept using beautiful markdown formatting (headers, bold, lists). Do not be brief.",
-    "common_pitfalls": "Common mistakes beginners make with this topic.",
-    "practical_examples": "Write a detailed markdown containing multiple code blocks demonstrating the concept. Explain the code. MUST be a string, not an array.",
+    "narrative_hook": "A short, engaging hook in Russian.",
+    "analogy": "A real-world analogy in Russian.",
+    "detailed_theory": "A massive, deep explanation of this concept using beautiful markdown formatting (headers, bold, lists). Do not be brief. Write entirely in Russian.",
+    "common_pitfalls": "Common mistakes beginners make with this topic in Russian.",
+    "practical_examples": "Write a detailed markdown containing multiple code blocks demonstrating the concept in Russian. Explain the code. MUST be a string, not an array.",
     "practice_type": "algorithmic",
     "practice_difficulty": "medium",
-    "practice_task": "A single comprehensive hands-on coding challenge or task scenario formatted in markdown.",
-    "practice_requirements": ["Requirement 1", "Requirement 2"],
-    "practice_hints": ["Hint 1"],
+    "practice_task": "A single comprehensive hands-on coding challenge or task scenario formatted in markdown in Russian.",
+    "practice_requirements": ["Requirement 1 in Russian", "Requirement 2 in Russian"],
+    "practice_hints": ["Hint 1 in Russian"],
     "initial_code": "Starter code snippet (string)",
     "solution_code": "Complete working solution code (string)",
     "active_recall_questions": [
         {
             "type": "multiple_choice",
-            "question": "A specific multiple-choice question testing understanding.",
+            "question": "A specific multiple-choice question in Russian.",
             "code_snippet": "Optional code context related to the question. If none, pass an empty string.",
-            "options": ["Option A", "Option B", "Option C", "Option D"],
-            "correct_answer": "Option A (must exactly match one option)"
+            "options": ["Option A in Russian", "Option B in Russian", "Option C in Russian", "Option D in Russian"],
+            "correct_answer": "Option A in Russian (must exactly match one option)"
         }
     ],
-    "interleaving_tasks": "How does this connect to previous topics?"
+    "interleaving_tasks": "How does this connect to previous topics? Write in Russian."
 }
 Include exactly 3 to 5 questions in active_recall_questions. Ensure code_snippet is a string for EVERY question. 
 Do NOT wrap the output in markdown backticks. Return raw JSON.`;
