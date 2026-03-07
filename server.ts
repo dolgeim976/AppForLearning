@@ -154,97 +154,168 @@ function repairAndParse(text: string): any {
     throw new Error('Не удалось починить JSON после 50 попыток');
 }
 
+const OUTLINE_PROMPT = `You are an expert Technical Curriculum Designer.
+Your task is to break down the provided topic into a list of 3 to 6 core sequential subtopics that form a complete learning path.
+Return ONLY a valid JSON object with the following structure:
+{
+    "topic": "The confirmed topic name",
+    "subtopics": ["Subtopic 1", "Subtopic 2", "Subtopic 3"]
+}
+Do NOT wrap the output in markdown backticks. Return raw JSON.`;
+
+function getNodePrompt(topic: string, subtopic: string): string {
+    return `You are a Senior Technical Instructor. You are writing exhaustive, high-quality content for the subtopic "${subtopic}", which belongs to the overarching topic "${topic}".
+Return ONLY a valid JSON object matching this EXACT structure. Provide extensive detail in detailed_theory using rich Markdown.
+{
+    "title": "${subtopic}",
+    "detailed_theory": "A massive, deep explanation of this concept using beautiful markdown formatting (headers, bold, lists). Do not be brief.",
+    "practical_examples": [
+        "Write detailed markdown containing code block demonstrating the concept. Explain the code."
+    ],
+    "practice_task_description": "A single comprehensive hands-on coding challenge or task scenario formatted in markdown.",
+    "practice_requirements": ["Requirement 1", "Requirement 2"],
+    "practice_hints": ["Hint 1"],
+    "initial_code": "Starter code snippet (string)",
+    "solution_code": "Complete working solution code (string)",
+    "active_recall_questions": [
+        {
+            "type": "multiple_choice",
+            "question": "A specific multiple-choice question testing understanding.",
+            "options": ["Option A", "Option B", "Option C", "Option D"],
+            "correct_answer": "Option A (must exactly match one option)",
+            "code_snippet": "Optional code context related to the question"
+        }
+    ]
+}
+Include exactly 3 to 5 questions in active_recall_questions.
+Do NOT wrap the output in markdown backticks. Return raw JSON.`;
+}
+
+async function callOpenRouter(messages: any[], model: string = "anthropic/claude-3.5-sonnet"): Promise<string> {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            "model": model,
+            "messages": messages,
+            "max_tokens": 8000,
+            "temperature": 0.4,
+            "provider": {
+                "ignore": ["Google AI Studio"],
+                "allow_fallbacks": true
+            }
+        })
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`OpenRouter API error ${response.status}: ${errorText}`);
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || "{}";
+}
+
 app.post('/api/llm/generate', async (req, res) => {
     try {
-        const { prompt, topic } = req.body;
+        const { topic } = req.body;
 
         if (!process.env.OPENROUTER_API_KEY) {
             return res.status(500).json({ error: 'OPENROUTER_API_KEY is not configured in .env' });
         }
 
-        console.log(`[Backend] Generating roadmap for topic: ${topic} via OpenRouter...`);
+        console.log(`[Backend] 🚀 Starting Agentic generation for topic: ${topic}`);
 
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                "model": "openai/gpt-4o-mini",
-                "messages": [
-                    { "role": "system", "content": prompt },
-                    { "role": "user", "content": `Сгенерируй учебный трек для: ${topic}` }
-                ],
-                "response_format": { "type": "json_object" },
-                "max_tokens": 16000,
-                "provider": {
-                    "ignore": ["Google AI Studio"],
-                    "allow_fallbacks": true
+        // STEP 1: Fetch Outline
+        const outlineMessages = [
+            { "role": "system", "content": OUTLINE_PROMPT },
+            { "role": "user", "content": `Create a curriculum outline for: ${topic}` }
+        ];
+
+        console.log(`[Backend] \t➔ Fetching Outline...`);
+        let outlineRaw = await callOpenRouter(outlineMessages, "anthropic/claude-3.5-sonnet");
+        outlineRaw = sanitizeLLMJson(outlineRaw);
+
+        let outlineData;
+        try {
+            outlineData = repairAndParse(outlineRaw);
+        } catch (e) {
+            console.error('[Backend] Outline parsing failed, falling back to regex...', e);
+            // Fallback parsing if LLM sends raw array or weird format
+            const foundTopics = outlineRaw.match(/"([^"]+)"/g);
+            outlineData = {
+                topic: topic,
+                subtopics: foundTopics ? foundTopics.map(s => s.replace(/"/g, '')) : ["Basic Concepts", "Advanced Usage"]
+            };
+        }
+
+        const subtopics = Array.isArray(outlineData.subtopics) && outlineData.subtopics.length > 0
+            ? outlineData.subtopics.slice(0, 6)
+            : ["Core Concepts", "Implementation", "Best Practices"];
+
+        console.log(`[Backend] \t➔ Outline generated: [${subtopics.join(', ')}]`);
+        console.log(`[Backend] \t➔ Dispatching ${subtopics.length} parallel requests...`);
+
+        // STEP 2: Fetch Nodes in Parallel
+        const nodePromises = subtopics.map(async (subtopic: string, index: number) => {
+            const prompt = getNodePrompt(outlineData.topic || topic, subtopic);
+            const messages = [
+                { "role": "system", "content": prompt },
+                { "role": "user", "content": `Generate detailed content for: ${subtopic}` }
+            ];
+
+            try {
+                let nodeContent = await callOpenRouter(messages, "anthropic/claude-3.5-sonnet");
+                nodeContent = sanitizeLLMJson(nodeContent);
+                let parsedNode = repairAndParse(nodeContent);
+
+                // Sanitize active_recall_questions
+                if (parsedNode.active_recall_questions && Array.isArray(parsedNode.active_recall_questions)) {
+                    parsedNode.active_recall_questions = parsedNode.active_recall_questions.filter((q: any) => {
+                        if (!q || !q.question) return false;
+                        if (typeof q.options === 'string') {
+                            q.options = q.options.split(/[,;]/).map((s: string) => s.trim()).filter(Boolean);
+                        }
+                        if (!Array.isArray(q.options) || q.options.length < 2) return false;
+                        if (!q.correct_answer) q.correct_answer = q.options[0] || '';
+                        return true;
+                    });
                 }
-            })
+
+                // Ensure arrays
+                if (parsedNode.practice_requirements && !Array.isArray(parsedNode.practice_requirements)) parsedNode.practice_requirements = [];
+                if (parsedNode.practice_hints && !Array.isArray(parsedNode.practice_hints)) parsedNode.practice_hints = [];
+                if (parsedNode.practical_examples && !Array.isArray(parsedNode.practical_examples)) parsedNode.practical_examples = [];
+
+                console.log(`[Backend] \t\t🟢 Node ${index + 1}/${subtopics.length} completed: ${subtopic}`);
+                return parsedNode;
+            } catch (err: any) {
+                console.error(`[Backend] \t\t🔴 Node ${index + 1} failed (${subtopic}):`, err.message);
+                return null;
+            }
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`OpenRouter API error ${response.status}: ${errorText}`);
+        const parallelResults = await Promise.all(nodePromises);
+
+        // Filter out any failed nodes
+        const successfulNodes = parallelResults.filter(node => node && node.title && node.detailed_theory);
+
+        if (successfulNodes.length === 0) {
+            throw new Error('All parallel node generations failed.');
         }
 
-        const data = await response.json();
-        let aiContent = data.choices?.[0]?.message?.content || "{}";
-        const finishReason = data.choices?.[0]?.finish_reason || 'unknown';
+        // Assemble Final JSON
+        const finalJson = {
+            topic: outlineData.topic || topic,
+            roadmap_nodes: successfulNodes
+        };
 
-        console.log(`[Backend] Raw LLM response length: ${aiContent.length} chars, finish_reason: ${finishReason}`);
+        console.log(`[Backend] ✅ Assembly complete. Successfully generated ${successfulNodes.length} nodes.`);
 
-        // Шаг 1: Базовая очистка
-        const sanitized = sanitizeLLMJson(aiContent);
-
-        // Шаг 2: Итеративный ремонт (кавычки + обрезка)
-        try {
-            const parsedJson = repairAndParse(sanitized);
-
-            // Фильтруем неполные узлы (обрезанные из-за лимита токенов)
-            if (parsedJson.roadmap_nodes && Array.isArray(parsedJson.roadmap_nodes)) {
-                parsedJson.roadmap_nodes = parsedJson.roadmap_nodes.filter((node: any) =>
-                    node && node.title && node.detailed_theory
-                );
-
-                // Sanitize quiz questions in each node
-                for (const node of parsedJson.roadmap_nodes) {
-                    if (node.active_recall_questions && Array.isArray(node.active_recall_questions)) {
-                        node.active_recall_questions = node.active_recall_questions.filter((q: any) => {
-                            if (!q || !q.question) return false;
-
-                            // Fix options: if string, try to split or wrap in array
-                            if (typeof q.options === 'string') {
-                                q.options = q.options.split(/[,;]/).map((s: string) => s.trim()).filter(Boolean);
-                            }
-                            if (!Array.isArray(q.options) || q.options.length < 2) return false;
-
-                            // Ensure correct_answer exists
-                            if (!q.correct_answer) q.correct_answer = q.options[0] || '';
-
-                            return true;
-                        });
-                    }
-
-                    // Sanitize practice fields
-                    if (node.practice_requirements && !Array.isArray(node.practice_requirements)) {
-                        node.practice_requirements = [];
-                    }
-                    if (node.practice_hints && !Array.isArray(node.practice_hints)) {
-                        node.practice_hints = [];
-                    }
-                }
-            }
-
-            const nodeCount = parsedJson.roadmap_nodes?.length || 0;
-            console.log(`[Backend] ✅ JSON parsed successfully. Complete nodes: ${nodeCount}`);
-            return res.json(parsedJson);
-        } catch (parseError: any) {
-            console.error('[Backend] ❌ All repair attempts failed:', parseError.message);
-            throw new Error('LLM вернул невалидный JSON');
-        }
+        return res.json(finalJson);
 
     } catch (error: any) {
         console.error('[Backend] API Error:', error.message || error);
