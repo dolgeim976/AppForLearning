@@ -52,26 +52,18 @@ export class SRSEngine {
     }
 
     /** Import quiz questions from a track as SRS cards */
-    importFromTrack(trackId: string, trackTopic: string, nodes: Array<{
-        title: string;
-        active_recall_questions: Array<{
-            type?: string;
-            question: string;
-            options: string[];
-            correct_answer: string;
-            code_snippet?: string;
-        }>;
-    }>): number {
+    importFromTrack(trackId: string, trackTopic: string, nodes: any[]): number {
         let imported = 0;
         const today = new Date().toISOString().split('T')[0];
 
         for (const node of nodes) {
-            if (!node.active_recall_questions || !Array.isArray(node.active_recall_questions)) continue;
+            if (!node.micro_loops || !Array.isArray(node.micro_loops)) continue;
 
-            for (const q of node.active_recall_questions) {
-                if (!q.question || !q.options || q.options.length < 2) continue;
+            for (const loop of node.micro_loops) {
+                const fc = loop.fast_consolidation;
+                if (!fc || !fc.question) continue;
 
-                const cardId = `${trackId}_${node.title}_${q.question}`.substring(0, 120);
+                const cardId = `${trackId}_${node.title}_${fc.question}`.substring(0, 120);
 
                 // Skip if already exists
                 if (this.cards.find(c => c.id === cardId)) continue;
@@ -81,11 +73,11 @@ export class SRSEngine {
                     trackId,
                     trackTopic,
                     nodeTitle: node.title,
-                    question: q.question,
-                    options: q.options,
-                    correct_answer: q.correct_answer,
-                    code_snippet: q.code_snippet || '',
-                    type: (q.type as SRSCard['type']) || 'multiple_choice',
+                    question: fc.question,
+                    options: [],
+                    correct_answer: (fc.expected_exact_answer || fc.bug_explanation || '').toString(),
+                    code_snippet: fc.code_block || '',
+                    type: (fc.type as SRSCard['type']) || 'predict_output',
                     easeFactor: 2.5,
                     interval: 0,
                     repetitions: 0,

@@ -1,6 +1,5 @@
-import { TrackRoadmap } from './types';
 
-export const mockRoadmap: TrackRoadmap = {
+export const mockRoadmap: any = {
     topic: "Node.js Streams",
     roadmap_nodes: [
         {

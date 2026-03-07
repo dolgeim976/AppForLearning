@@ -84,94 +84,94 @@ export const MicroLoopView: React.FC<{ loop: MicroLoop; index: number }> = ({ lo
                                         <div
                                             key={idx}
                                             onClick={() => !revealed && setSelectedBugLine(lineNum)}
-                                            className={\`group flex shrink-0 min-w-max px-4 py-1.5 cursor-pointer rounded-lg transition-all \${!revealed && 'hover:bg-gray-800/60'} \${isSelected && !revealed ? 'bg-amber-900/40 border border-amber-700/50' : 'border border-transparent'} \${isErrorLine ? 'bg-rose-900/40 border border-rose-500/50' : ''}\`}
+                                            className={`group flex shrink-0 min-w-max px-4 py-1.5 cursor-pointer rounded-lg transition-all ${!revealed && 'hover:bg-gray-800/60'} ${isSelected && !revealed ? 'bg-amber-900/40 border border-amber-700/50' : 'border border-transparent'} ${isErrorLine ? 'bg-rose-900/40 border border-rose-500/50' : ''}`}
                                         >
-                                <span className="text-gray-600 mr-4 select-none group-hover:text-gray-400">{lineNum}</span>
-                                <span className={\`\${isErrorLine ? 'text-rose-300' : isSelected && !revealed ? 'text-amber-300' : 'text-gray-300'}\`}>{lineStr}</span>
+                                            <span className="text-gray-600 mr-4 select-none group-hover:text-gray-400">{lineNum}</span>
+                                            <span className={`${isErrorLine ? 'text-rose-300' : isSelected && !revealed ? 'text-amber-300' : 'text-gray-300'}`}>{lineStr}</span>
                                         </div>
-                );
+                                    );
                                 })}
-            </div>
-            ) : (
-            <pre className="bg-[#0d1321] p-6 text-sm font-mono text-violet-300 overflow-x-auto leading-relaxed whitespace-pre-wrap">{fc.code_block}</pre>
-                        )}
-        </div>
-    )
-}
-
-{
-    !revealed && (
-        <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
-            {isPredict ? (
-                <input
-                    type="text"
-                    placeholder="Например: 810"
-                    value={userOutput}
-                    onChange={e => setUserOutput(e.target.value)}
-                    className="flex-1 bg-gray-950 border border-gray-700 text-white rounded-xl px-5 py-3 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all font-mono placeholder:text-gray-600 shadow-inner"
-                />
-            ) : (
-                <div className="flex-1 text-sm text-gray-400 bg-gray-950 px-5 py-3 rounded-xl border border-gray-700 flex items-center justify-between">
-                    {selectedBugLine ? <span>Выбрана строка: <strong className="text-amber-400 font-mono text-lg">{selectedBugLine}</strong></span> : <span>Кликните на строку с ошибкой в коде выше</span>}
-                    {selectedBugLine && <span className="text-xs border border-gray-700 px-2 py-1 rounded bg-gray-800">Изменить кликом</span>}
-                </div>
-            )}
-            <button
-                onClick={checkAnswer}
-                disabled={isPredict ? !userOutput.trim() : !selectedBugLine}
-                className="bg-violet-600 hover:bg-violet-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-violet-900/20 active:scale-95 whitespace-nowrap"
-            >
-                Проверить
-            </button>
-        </div>
-    )
-}
-
-{
-    revealed && (
-        <div className={\`mt-2 p-6 rounded-2xl border shadow-xl animate-fade-in \${isCorrect ? 'bg-emerald-900/20 border-emerald-500/30' : 'bg-rose-900/20 border-rose-500/30'}\`}>
-                        <div className="flex items-start gap-4">
-                            <div className={\`text-3xl shrink-0 \${isCorrect ? 'text-emerald-400' : 'text-rose-400'}\`}>
-                                {isCorrect ? '🏆' : '❌'}
                             </div>
-                            <div className="flex-1">
-                                <h4 className={\`text-xl font-bold block mb-2 \${isCorrect ? 'text-emerald-400' : 'text-rose-400'}\`}>
-                                    {isCorrect ? 'Абсолютно верно!' : 'Ой, ошибка!'}
-                                </h4>
-                                {!isCorrect && (
-                                    <p className="text-gray-300 leading-relaxed text-base">
-                                        {fc.explanation_on_fail}
-                                    </p>
-                                )}
-                                {isCorrect && isSpotBug && fc.bug_explanation && (
-                                    <p className="text-emerald-200/80 leading-relaxed text-base mt-2 pt-2 border-t border-emerald-500/20">
-                                        {fc.bug_explanation}
-                                    </p>
-                                )}
-                                {!isCorrect && isPredict && (
-                                    <div className="mt-4 bg-gray-950 border border-rose-900/50 rounded-lg p-3 inline-block font-mono text-sm shadow-inner">
-                                        <div className="text-gray-500 mb-1">Ожидаемый вывод:</div>
-                                        <div className="text-rose-200">{fc.expected_exact_answer}</div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                        {!isCorrect && (
-                            <div className="mt-6 flex justify-end">
-                                <button
-                                    onClick={() => {
-                                        setRevealed(false);
-                                        setUserOutput('');
-                                        setSelectedBugLine(null);
-                                    }}
-                                    className="bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold py-2 px-6 rounded-lg transition-colors border border-gray-600"
-                                >
-                                    Попробовать еще раз
-                                </button>
-                            </div>
+                        ) : (
+                            <pre className="bg-[#0d1321] p-6 text-sm font-mono text-violet-300 overflow-x-auto leading-relaxed whitespace-pre-wrap">{fc.code_block}</pre>
                         )}
                     </div>
-                )}
+                )
+                }
+
+                {
+                    !revealed && (
+                        <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+                            {isPredict ? (
+                                <input
+                                    type="text"
+                                    placeholder="Например: 810"
+                                    value={userOutput}
+                                    onChange={e => setUserOutput(e.target.value)}
+                                    className="flex-1 bg-gray-950 border border-gray-700 text-white rounded-xl px-5 py-3 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all font-mono placeholder:text-gray-600 shadow-inner"
+                                />
+                            ) : (
+                                <div className="flex-1 text-sm text-gray-400 bg-gray-950 px-5 py-3 rounded-xl border border-gray-700 flex items-center justify-between">
+                                    {selectedBugLine ? <span>Выбрана строка: <strong className="text-amber-400 font-mono text-lg">{selectedBugLine}</strong></span> : <span>Кликните на строку с ошибкой в коде выше</span>}
+                                    {selectedBugLine && <span className="text-xs border border-gray-700 px-2 py-1 rounded bg-gray-800">Изменить кликом</span>}
+                                </div>
+                            )}
+                            <button
+                                onClick={checkAnswer}
+                                disabled={isPredict ? !userOutput.trim() : !selectedBugLine}
+                                className="bg-violet-600 hover:bg-violet-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-violet-900/20 active:scale-95 whitespace-nowrap"
+                            >
+                                Проверить
+                            </button>
+                        </div>
+                    )
+                }
+
+                {
+                    revealed && (
+                        <div className={`mt-2 p-6 rounded-2xl border shadow-xl animate-fade-in ${isCorrect ? 'bg-emerald-900/20 border-emerald-500/30' : 'bg-rose-900/20 border-rose-500/30'}`}>
+                            <div className="flex items-start gap-4">
+                                <div className={`text-3xl shrink-0 ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                    {isCorrect ? '🏆' : '❌'}
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className={`text-xl font-bold block mb-2 ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                        {isCorrect ? 'Абсолютно верно!' : 'Ой, ошибка!'}
+                                    </h4>
+                                    {!isCorrect && (
+                                        <p className="text-gray-300 leading-relaxed text-base">
+                                            {fc.explanation_on_fail}
+                                        </p>
+                                    )}
+                                    {isCorrect && isSpotBug && fc.bug_explanation && (
+                                        <p className="text-emerald-200/80 leading-relaxed text-base mt-2 pt-2 border-t border-emerald-500/20">
+                                            {fc.bug_explanation}
+                                        </p>
+                                    )}
+                                    {!isCorrect && isPredict && (
+                                        <div className="mt-4 bg-gray-950 border border-rose-900/50 rounded-lg p-3 inline-block font-mono text-sm shadow-inner">
+                                            <div className="text-gray-500 mb-1">Ожидаемый вывод:</div>
+                                            <div className="text-rose-200">{fc.expected_exact_answer}</div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            {!isCorrect && (
+                                <div className="mt-6 flex justify-end">
+                                    <button
+                                        onClick={() => {
+                                            setRevealed(false);
+                                            setUserOutput('');
+                                            setSelectedBugLine(null);
+                                        }}
+                                        className="bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold py-2 px-6 rounded-lg transition-colors border border-gray-600"
+                                    >
+                                        Попробовать еще раз
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
             </div>
         </div>
     );

@@ -25,7 +25,7 @@ export const KnowledgeMap: React.FC<KnowledgeMapProps> = ({ nodes, activeNodeId,
                 const isActive = (node.id || `node_${idx}`) === activeNodeId;
                 const config = statusConfig[status];
                 const isLocked = status === 'locked';
-                const quizCount = node.active_recall_questions?.length || 0;
+                const quizCount = node.micro_loops?.length || 0;
 
                 return (
                     <div key={node.id || idx} className="relative">
@@ -33,8 +33,8 @@ export const KnowledgeMap: React.FC<KnowledgeMapProps> = ({ nodes, activeNodeId,
                         {idx < nodes.length - 1 && (
                             <div className="absolute left-[22px] top-[52px] w-[2px] h-[calc(100%-20px)] z-0">
                                 <div className={`w-full h-full ${status === 'completed'
-                                        ? 'bg-gradient-to-b from-emerald-500 to-emerald-500/30'
-                                        : 'bg-gradient-to-b from-gray-700 to-gray-800'
+                                    ? 'bg-gradient-to-b from-emerald-500 to-emerald-500/30'
+                                    : 'bg-gradient-to-b from-gray-700 to-gray-800'
                                     }`} />
                             </div>
                         )}
@@ -68,15 +68,15 @@ export const KnowledgeMap: React.FC<KnowledgeMapProps> = ({ nodes, activeNodeId,
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                     <span className={`text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-md ${status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' :
-                                            status === 'in_progress' ? 'bg-blue-500/20 text-blue-400' :
-                                                status === 'available' ? 'bg-amber-500/20 text-amber-400' :
-                                                    'bg-gray-700 text-gray-500'
+                                        status === 'in_progress' ? 'bg-blue-500/20 text-blue-400' :
+                                            status === 'available' ? 'bg-amber-500/20 text-amber-400' :
+                                                'bg-gray-700 text-gray-500'
                                         }`}>
                                         {config.label}
                                     </span>
                                 </div>
                                 <h3 className={`font-semibold text-sm leading-snug line-clamp-2 ${isActive ? 'text-white' :
-                                        isLocked ? 'text-gray-600' : 'text-gray-300'
+                                    isLocked ? 'text-gray-600' : 'text-gray-300'
                                     }`}>
                                     {node.title}
                                 </h3>
