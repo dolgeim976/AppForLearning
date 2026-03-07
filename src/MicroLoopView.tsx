@@ -11,8 +11,8 @@ export const MicroLoopView: React.FC<{ loop: MicroLoop; index: number }> = ({ lo
     const [revealed, setRevealed] = useState(false);
 
     const fc = loop.fast_consolidation;
-    const isPredict = fc.type === 'predict_output';
-    const isSpotBug = fc.type === 'spot_the_bug';
+    const isPredictInput = ['predict_output', 'state_tracing', 'fill_in_the_blank'].includes(fc.type);
+    const isLineSelect = ['spot_the_bug', 'logic_spotter'].includes(fc.type);
 
     const checkAnswer = () => {
         setRevealed(true);
@@ -20,10 +20,10 @@ export const MicroLoopView: React.FC<{ loop: MicroLoop; index: number }> = ({ lo
 
     let isCorrect = false;
     if (revealed) {
-        if (isPredict) {
+        if (isPredictInput) {
             // strip whitespace for exact match comparison just in case
             isCorrect = userOutput.trim() === (fc.expected_exact_answer || '').trim();
-        } else if (isSpotBug) {
+        } else if (isLineSelect) {
             isCorrect = selectedBugLine === fc.bug_line;
         }
     }
@@ -51,8 +51,16 @@ export const MicroLoopView: React.FC<{ loop: MicroLoop; index: number }> = ({ lo
             {/* 2. Fast Consolidation Task */}
             <div className="p-6 md:p-8 bg-gray-900">
                 <h4 className="flex items-center gap-2 text-lg font-bold mb-4 text-violet-300">
-                    <span className="text-2xl">{isPredict ? '🧠' : '🐛'}</span>
-                    {isPredict ? 'Предскажи вывод (Mental Tracing)' : 'Найди баг (Code Review)'}
+                    <span className="text-2xl">
+                        {fc.type === 'predict_output' ? '🧠' :
+                            fc.type === 'state_tracing' ? '⏱️' :
+                                fc.type === 'fill_in_the_blank' ? '✍️' :
+                                    fc.type === 'logic_spotter' ? '🔎' : '🐛'}
+                    </span>
+                    {fc.type === 'predict_output' ? 'Предскажи вывод (Mental Tracing)' :
+                        fc.type === 'state_tracing' ? 'Отследи состояние (State Tracing)' :
+                            fc.type === 'fill_in_the_blank' ? 'Впиши пропущенное (Active Recall)' :
+                                fc.type === 'logic_spotter' ? 'Найди уязвимость или неоптимальность (Logic Spot)' : 'Найди баг (Code Review)'}
                 </h4>
 
                 <p className="text-gray-300 mb-6 font-medium text-lg leading-relaxed bg-gray-800/30 p-4 rounded-xl border border-gray-700/50">
@@ -65,7 +73,7 @@ export const MicroLoopView: React.FC<{ loop: MicroLoop; index: number }> = ({ lo
                             <div className="flex gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-rose-500" /><div className="w-2.5 h-2.5 rounded-full bg-yellow-500" /><div className="w-2.5 h-2.5 rounded-full bg-emerald-500" /></div>
                             <span className="text-xs text-gray-400 font-mono ml-2">task.java</span>
                         </div>
-                        {isSpotBug ? (
+                        {isLineSelect ? (
                             <div className="bg-[#0d1321] p-2 text-sm font-mono text-gray-300 overflow-x-auto leading-relaxed whitespace-pre-wrap">
                                 {fc.code_block.split(/\\r?\\n|\\\\n/).map((line, idx) => {
                                     // Parse line number if it starts with "1. " format
@@ -102,10 +110,10 @@ export const MicroLoopView: React.FC<{ loop: MicroLoop; index: number }> = ({ lo
                 {
                     !revealed && (
                         <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
-                            {isPredict ? (
+                            {isPredictInput ? (
                                 <input
                                     type="text"
-                                    placeholder="Например: 810"
+                                    placeholder={fc.type === 'fill_in_the_blank' ? "Ваш ответ..." : "Например: 810"}
                                     value={userOutput}
                                     onChange={e => setUserOutput(e.target.value)}
                                     className="flex-1 bg-gray-950 border border-gray-700 text-white rounded-xl px-5 py-3 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all font-mono placeholder:text-gray-600 shadow-inner"
@@ -118,7 +126,7 @@ export const MicroLoopView: React.FC<{ loop: MicroLoop; index: number }> = ({ lo
                             )}
                             <button
                                 onClick={checkAnswer}
-                                disabled={isPredict ? !userOutput.trim() : !selectedBugLine}
+                                disabled={isPredictInput ? !userOutput.trim() : !selectedBugLine}
                                 className="bg-violet-600 hover:bg-violet-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-violet-900/20 active:scale-95 whitespace-nowrap"
                             >
                                 Проверить
@@ -143,12 +151,12 @@ export const MicroLoopView: React.FC<{ loop: MicroLoop; index: number }> = ({ lo
                                             {fc.explanation_on_fail || fc.bug_explanation}
                                         </p>
                                     )}
-                                    {isCorrect && isSpotBug && fc.bug_explanation && (
+                                    {isCorrect && isLineSelect && fc.bug_explanation && (
                                         <p className="text-emerald-200/80 leading-relaxed text-base mt-2 pt-2 border-t border-emerald-500/20">
                                             {fc.bug_explanation}
                                         </p>
                                     )}
-                                    {!isCorrect && isPredict && (
+                                    {!isCorrect && isPredictInput && (
                                         <div className="mt-4 bg-gray-950 border border-rose-900/50 rounded-lg p-3 inline-block font-mono text-sm shadow-inner">
                                             <div className="text-gray-500 mb-1">Ожидаемый вывод:</div>
                                             <div className="text-rose-200">{fc.expected_exact_answer}</div>

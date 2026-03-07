@@ -6,7 +6,7 @@ export const NarrativeHookSchema = z.object({
 });
 
 export const FastConsolidationSchema = z.object({
-    type: z.enum(["predict_output", "spot_the_bug"]),
+    type: z.enum(["predict_output", "spot_the_bug", "state_tracing", "fill_in_the_blank", "logic_spotter"]),
     question: z.string(),
     code_block: z.string(),
     expected_exact_answer: z.string().optional(),

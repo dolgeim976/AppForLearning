@@ -170,27 +170,39 @@ Return ONLY a valid JSON object matching this EXACT structure. Use rich Markdown
   },
   "micro_loops": [
     {
-      "loop_id": "Краткое название концепта (например, 'Создание объекта')",
-      "theory_chunk": "Объяснение одного концепта без лишней воды (2-3 абзаца).",
-      "syntax_snippet": "A concise code snippet illustrating the concept if applicable (or empty string)",
+      "loop_id": "Отслеживание состояния",
+      "theory_chunk": "Объяснение концепта без лишней воды (2-3 абзаца).",
+      "syntax_snippet": "A concise code snippet illustrating the concept",
       "fast_consolidation": {
-        "type": "predict_output",
-        "question": "Что выведет этот код? (Mental tracing question)",
-        "code_block": "Small code block for the user to mentally trace",
-        "expected_exact_answer": "exact expected output string",
-        "explanation_on_fail": "Explanation of why the output is what it is, shown if they answer incorrectly."
+        "type": "state_tracing",
+        "question": "Отследите состояние объекта. Что будет лежать внутри переменной после выполнения 3-й строки?",
+        "code_block": "1. int a = 5;\\n2. a += 2;\\n3. a++;",
+        "expected_exact_answer": "8",
+        "explanation_on_fail": "На строке 2 a становится 7, на строке 3 увеличивается до 8."
       }
     },
     {
-      "loop_id": "Краткое название концепта 2",
+      "loop_id": "Активное извлечение",
       "theory_chunk": "Explanation of the next concept.",
       "syntax_snippet": "Target code",
       "fast_consolidation": {
-        "type": "spot_the_bug",
-        "question": "В какой строке концептуальная или синтаксическая ошибка?",
-        "code_block": "1. Code line 1\\n2. Code line 2\\n3. Bug line\\n4. Code line 4",
+        "type": "fill_in_the_blank",
+        "question": "Впишите пропущенный метод.",
+        "code_block": "StringBuilder query = new StringBuilder(\"SELECT \");\\nquery.____(\"*\");",
+        "expected_exact_answer": "append",
+        "explanation_on_fail": "Метод, добавляющий строку в конец StringBuilder'а, называется append."
+      }
+    },
+    {
+      "loop_id": "Поиск концептуальной дыры",
+      "theory_chunk": "Explanation of an anti-pattern or logic error.",
+      "syntax_snippet": "Target code with bad logic",
+      "fast_consolidation": {
+        "type": "logic_spotter",
+        "question": "Код работает, но он медленный/небезопасный. Кликните на строку, которая является 'узким горлышком'.",
+        "code_block": "1. String s = \"\";\\n2. for(int i=0; i<100; i++) {\\n3.   s = s + i;\\n4. }",
         "bug_line": 3,
-        "bug_explanation": "Detailed explanation of why line 3 is wrong."
+        "bug_explanation": "Внутри цикла оператор '+' создает новые объекты String, что убивает производительность."
       }
     }
   ],
