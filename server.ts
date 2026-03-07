@@ -191,7 +191,7 @@ Include exactly 3 to 5 questions in active_recall_questions.
 Do NOT wrap the output in markdown backticks. Return raw JSON.`;
 }
 
-async function callOpenRouter(messages: any[], model: string = "google/gemini-2.0-flash-exp:free"): Promise<string> {
+async function callOpenRouter(messages: any[], model: string = "meta-llama/llama-3.3-70b-instruct:free"): Promise<string> {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -236,7 +236,7 @@ app.post('/api/llm/generate', async (req, res) => {
         ];
 
         console.log(`[Backend] \t➔ Fetching Outline...`);
-        let outlineRaw = await callOpenRouter(outlineMessages, "google/gemini-2.0-flash-exp:free");
+        let outlineRaw = await callOpenRouter(outlineMessages, "meta-llama/llama-3.3-70b-instruct:free");
         outlineRaw = sanitizeLLMJson(outlineRaw);
 
         let outlineData;
@@ -268,7 +268,7 @@ app.post('/api/llm/generate', async (req, res) => {
             ];
 
             try {
-                let nodeContent = await callOpenRouter(messages, "google/gemini-2.0-flash-exp:free");
+                let nodeContent = await callOpenRouter(messages, "meta-llama/llama-3.3-70b-instruct:free");
                 nodeContent = sanitizeLLMJson(nodeContent);
                 let parsedNode = repairAndParse(nodeContent);
 
