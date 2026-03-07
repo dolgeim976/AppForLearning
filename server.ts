@@ -165,38 +165,67 @@ Return ONLY a valid JSON object with the following structure:
 Do NOT wrap the output in markdown backticks. Return raw JSON.`;
 
 function getNodePrompt(topic: string, subtopic: string): string {
-    return `You are a Senior Technical Instructor. You are writing exhaustive, high-quality content for the subtopic "${subtopic}", which belongs to the overarching topic "${topic}".
-ALL TEXT CONTENT, THEORY, INSTRUCTIONS, QUESTIONS AND CODE COMMENTS MUST BE WRITTEN STRICTLY IN RUSSIAN.
-IMPORTANT: Do NOT translate the values for "practice_type", "practice_difficulty", or "type". They MUST remain exact English enums ('algorithmic' | 'debugging' | 'replication', 'easy' | 'medium' | 'hard', 'multiple_choice' | 'predict_output' | 'spot_bug').
-Return ONLY a valid JSON object matching this EXACT structure. Provide extensive detail in detailed_theory using rich Markdown.
+    return `You are a Senior EdTech Professor and Expert in Cognitive Psychology. You are generating a highly structured learning module for the subtopic "${subtopic}" (part of "${topic}").
+ALL TEXT CONTENT MUST BE STRICTLY IN RUSSIAN.
+IMPORTANT: Do NOT translate the enum values for "type" or JSON keys.
+Return ONLY a valid JSON object matching this EXACT structure. Use rich Markdown in text fields where appropriate. Do NOT wrap the output in markdown backticks. Return raw JSON.
+
 {
-    "title": "Название подтемы на русском",
-    "day": 1,
-    "narrative_hook": "A short, engaging hook in Russian.",
-    "analogy": "A real-world analogy in Russian.",
-    "detailed_theory": "A massive, deep explanation of this concept using beautiful markdown formatting (headers, bold, lists). Do not be brief. Write entirely in Russian.",
-    "common_pitfalls": "Common mistakes beginners make with this topic in Russian.",
-    "practical_examples": "Write a detailed markdown containing multiple code blocks demonstrating the concept in Russian. Explain the code. MUST be a string, not an array.",
-    "practice_type": "algorithmic",
-    "practice_difficulty": "medium",
-    "practice_task": "A single comprehensive hands-on coding challenge or task scenario formatted in markdown in Russian.",
-    "practice_requirements": ["Requirement 1 in Russian", "Requirement 2 in Russian"],
-    "practice_hints": ["Hint 1 in Russian"],
-    "initial_code": "Starter code snippet (string)",
-    "solution_code": "Complete working solution code (string)",
-    "active_recall_questions": [
-        {
-            "type": "multiple_choice",
-            "question": "A specific multiple-choice question in Russian.",
-            "code_snippet": "Optional code context related to the question. If none, pass an empty string.",
-            "options": ["Option A in Russian", "Option B in Russian", "Option C in Russian", "Option D in Russian"],
-            "correct_answer": "Option A in Russian (must exactly match one option)"
-        }
+  "title": "Название подтемы на русском",
+  "day": 1,
+  "topic": "Название темы",
+  "narrative_hook": {
+    "title": "Зачем это нужно?",
+    "analogy": "A real-world analogy in Russian connecting this concept to something familiar."
+  },
+  "micro_loops": [
+    {
+      "loop_id": "concept_1_identifier",
+      "theory_chunk": "A focused, bite-sized explanation of a SINGLE concept in Russian (2-3 paragraphs max).",
+      "syntax_snippet": "A concise code snippet illustrating the concept if applicable (or empty string)",
+      "fast_consolidation": {
+        "type": "predict_output",
+        "question": "Что выведет этот код? (Mental tracing question)",
+        "code_block": "Small code block for the user to mentally trace",
+        "expected_exact_answer": "exact expected output string",
+        "explanation_on_fail": "Explanation of why the output is what it is, shown if they answer incorrectly."
+      }
+    },
+    {
+      "loop_id": "concept_2_identifier",
+      "theory_chunk": "Explanation of the next concept.",
+      "syntax_snippet": "Target code",
+      "fast_consolidation": {
+        "type": "spot_the_bug",
+        "question": "В какой строке концептуальная или синтаксическая ошибка?",
+        "code_block": "1. Code line 1\\n2. Code line 2\\n3. Bug line\\n4. Code line 4",
+        "bug_line": 3,
+        "bug_explanation": "Detailed explanation of why line 3 is wrong."
+      }
+    }
+  ],
+  "final_boss_practice": {
+    "type": "parsons_problem",
+    "mission": "Write a mission description here for assembling the final solution.",
+    "correct_sequence": [
+      "Code line 1",
+      "Code line 2",
+      "Code line 3"
     ],
-    "interleaving_tasks": "How does this connect to previous topics? Write in Russian."
+    "distractors": [
+      "Distractor code line 1",
+      "Distractor code line 2"
+    ]
+  },
+  "spaced_repetition_metadata": {
+    "keywords": ["Keyword 1", "Keyword 2"],
+    "review_prompts": [
+      "A question to prompt active recall later."
+    ]
+  }
 }
-Include exactly 3 to 5 questions in active_recall_questions. Ensure code_snippet is a string for EVERY question. 
-Do NOT wrap the output in markdown backticks. Return raw JSON.`;
+
+Include 2 to 4 micro_loops in the array, making sure at least one is 'predict_output' and one is 'spot_the_bug'.`;
 }
 
 async function callOpenRouter(messages: any[], model: string = "openai/gpt-4o-mini"): Promise<string> {
