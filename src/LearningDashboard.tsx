@@ -251,7 +251,7 @@ export const LearningDashboard: React.FC<LearningDashboardProps> = ({ topic, nod
                                 <h3 className="text-2xl font-bold text-gray-100 mb-4 flex items-center gap-3 border-b border-gray-800 pb-2">
                                     <span className="text-blue-400">#</span> Подробный конспект
                                 </h3>
-                                <div className="bg-gray-800/40 p-8 rounded-2xl border border-gray-800 shadow-sm">
+                                <div className="bg-gray-800/40 p-4 md:p-8 rounded-2xl border border-gray-800 shadow-sm overflow-x-auto">
                                     <MarkdownRenderer content={activeNode.detailed_theory} />
                                 </div>
                             </section>
@@ -446,7 +446,7 @@ export const LearningDashboard: React.FC<LearningDashboardProps> = ({ topic, nod
                         }
 
                         if (questions.length === 0) {
-                            return <div className="text-center py-20 text-gray-500">Нет вопросов для этого узла</div>;
+                            return <div className="text-center py-20 px-6 text-gray-500 bg-gray-900 rounded-3xl border border-gray-800 mt-8">Квиз вопросов для этого урока еще нет.</div>;
                         }
 
                         const q = questions[quizCardIndex];
@@ -522,17 +522,17 @@ export const LearningDashboard: React.FC<LearningDashboardProps> = ({ topic, nod
                                 </div>
 
                                 {/* Question card */}
-                                <div key={quizCardIndex} className={`bg-gray-800/50 rounded-3xl p-8 border transition-all shadow-xl animate-fade-in-up
+                                <div key={quizCardIndex} className={`bg-gray-800/50 rounded-2xl md:rounded-3xl p-5 md:p-8 border transition-all shadow-xl animate-fade-in-up
                                     ${quizCardRevealed ? (isCorrect ? 'border-emerald-500/50 bg-emerald-900/10' : 'border-rose-500/50 bg-rose-900/10') : 'border-gray-700'}`}>
 
                                     {/* Type badge + question */}
-                                    <div className="flex items-start gap-4 mb-6">
-                                        <span className="text-rose-400 font-black bg-rose-500/10 px-3 py-1 rounded-xl text-sm border border-rose-500/20 shrink-0">Q{quizCardIndex + 1}</span>
-                                        <div className="flex-1">
+                                    <div className="flex flex-col sm:flex-row items-start gap-4 mb-6">
+                                        <span className="text-rose-400 font-black bg-rose-500/10 px-3 py-1 rounded-xl text-sm border border-rose-500/20 shrink-0 self-start">Q{quizCardIndex + 1}</span>
+                                        <div className="flex-1 w-full">
                                             <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full ${tc.bgColor} ${tc.textColor} border ${tc.borderColor} mb-3`}>
                                                 {tc.icon} {tc.label}
                                             </span>
-                                            <h4 className="text-xl text-gray-200 leading-relaxed font-bold">{q.question}</h4>
+                                            <h4 className="text-lg md:text-xl text-gray-200 leading-relaxed font-bold">{q.question}</h4>
                                         </div>
                                     </div>
 
@@ -588,10 +588,10 @@ export const LearningDashboard: React.FC<LearningDashboardProps> = ({ topic, nod
                                             <button
                                                 onClick={() => setQuizCardRevealed(true)}
                                                 disabled={!selectedAnswer}
-                                                className="bg-rose-600 hover:bg-rose-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg flex items-center gap-2"
+                                                className="w-full sm:w-auto bg-rose-600 hover:bg-rose-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-bold py-3 md:py-3 px-6 md:px-8 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
                                             >
                                                 Проверить
-                                                <span className="text-[10px] bg-rose-800 text-white/70 px-1.5 py-0.5 rounded font-mono border border-rose-700/50">Enter</span>
+                                                <span className="hidden md:inline text-[10px] bg-rose-800 text-white/70 px-1.5 py-0.5 rounded font-mono border border-rose-700/50">Enter</span>
                                             </button>
                                         ) : (
                                             <button
@@ -603,10 +603,10 @@ export const LearningDashboard: React.FC<LearningDashboardProps> = ({ topic, nod
                                                         setQuizCardRevealed(false);
                                                     }
                                                 }}
-                                                className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg flex items-center gap-2"
+                                                className="w-full sm:w-auto bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold py-3 md:py-3 px-6 md:px-8 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
                                             >
                                                 {quizCardIndex + 1 >= questions.length ? 'Завершить' : 'Следующий →'}
-                                                <span className="text-[10px] bg-rose-800/50 text-white/80 px-1.5 py-0.5 rounded font-mono border border-rose-500/30">Enter</span>
+                                                <span className="hidden md:inline text-[10px] bg-rose-800/50 text-white/80 px-1.5 py-0.5 rounded font-mono border border-rose-500/30">Enter</span>
                                             </button>
                                         )}
                                     </div>
