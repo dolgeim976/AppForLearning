@@ -191,7 +191,7 @@ Include exactly 3 to 5 questions in active_recall_questions.
 Do NOT wrap the output in markdown backticks. Return raw JSON.`;
 }
 
-async function callOpenRouter(messages: any[], model: string = "google/gemma-3-27b-it:free"): Promise<string> {
+async function callOpenRouter(messages: any[], model: string = "openrouter/free"): Promise<string> {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -202,11 +202,7 @@ async function callOpenRouter(messages: any[], model: string = "google/gemma-3-2
             "model": model,
             "messages": messages,
             "max_tokens": 8000,
-            "temperature": 0.4,
-            "provider": {
-                "ignore": ["Google AI Studio"],
-                "allow_fallbacks": true
-            }
+            "temperature": 0.4
         })
     });
 
@@ -236,7 +232,7 @@ app.post('/api/llm/generate', async (req, res) => {
         ];
 
         console.log(`[Backend] \t➔ Fetching Outline...`);
-        let outlineRaw = await callOpenRouter(outlineMessages, "google/gemma-3-27b-it:free");
+        let outlineRaw = await callOpenRouter(outlineMessages, "openrouter/free");
         outlineRaw = sanitizeLLMJson(outlineRaw);
 
         let outlineData;
@@ -268,7 +264,7 @@ app.post('/api/llm/generate', async (req, res) => {
             ];
 
             try {
-                let nodeContent = await callOpenRouter(messages, "google/gemma-3-27b-it:free");
+                let nodeContent = await callOpenRouter(messages, "openrouter/free");
                 nodeContent = sanitizeLLMJson(nodeContent);
                 let parsedNode = repairAndParse(nodeContent);
 
