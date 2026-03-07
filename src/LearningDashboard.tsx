@@ -14,7 +14,7 @@ type TabType = 'theory' | 'practice' | 'quiz';
 export const LearningDashboard: React.FC<LearningDashboardProps> = ({ topic, nodes }) => {
     const [activeNode, setActiveNode] = useState<RoadmapNode | null>(nodes[0] || null);
     const [activeTab, setActiveTab] = useState<TabType>('theory');
-    const [mapCollapsed, setMapCollapsed] = useState(false);
+    const [mapCollapsed, setMapCollapsed] = useState(() => window.innerWidth < 768);
     // Quiz State
     const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
     const [quizCardIndex, setQuizCardIndex] = useState(0);
@@ -59,6 +59,9 @@ export const LearningDashboard: React.FC<LearningDashboardProps> = ({ topic, nod
         setQuizCardIndex(0);
         setQuizCardRevealed(false);
         setQuizFinished(false);
+        if (window.innerWidth < 768) {
+            setMapCollapsed(true);
+        }
     }, [activeNode, nodes]);
 
     if (!activeNode) return <div className="p-8 text-white">Загрузка трека...</div>;
@@ -69,7 +72,7 @@ export const LearningDashboard: React.FC<LearningDashboardProps> = ({ topic, nod
         <div className="flex h-full w-full bg-gray-900 text-white font-sans overflow-hidden">
 
             {/* 1. ЛЕВАЯ ПАНЕЛЬ: Knowledge Map */}
-            <div className={`h-full border-r border-gray-800 flex flex-col bg-gray-950 shadow-2xl z-10 transition-all duration-300 ${mapCollapsed ? 'w-12 min-w-0 max-w-none' : 'w-1/4 min-w-[300px] max-w-[400px]'}`}>
+            <div className={`h-full absolute md:static inset-y-0 left-0 z-30 border-r border-gray-800 flex flex-col bg-gray-950 shadow-2xl transition-all duration-300 ${mapCollapsed ? '-translate-x-full md:translate-x-0 w-0 md:w-12 min-w-0 max-w-none shrink-0' : 'translate-x-0 w-full md:w-1/4 md:min-w-[300px] md:max-w-[400px] shrink-0'}`}>
                 {mapCollapsed ? (
                     <button
                         onClick={() => setMapCollapsed(false)}
@@ -136,19 +139,25 @@ export const LearningDashboard: React.FC<LearningDashboardProps> = ({ topic, nod
             <div className="flex-1 h-full flex flex-col bg-gray-900 relative">
 
                 {/* Persistent Status Micro-Bar */}
-                <div className="bg-gray-950 border-b border-gray-800/50 px-12 py-2 flex items-center justify-between text-xs">
-                    {/* Breadcrumb */}
-                    <div className="flex items-center gap-2 text-gray-500">
-                        <span className="hover:text-gray-300 cursor-default">{topic}</span>
-                        <span className="text-gray-700">›</span>
-                        <span className="text-blue-400 font-medium">День {activeNode.day}</span>
-                        <span className="text-gray-700">›</span>
-                        <span className={`font-medium ${activeTab === 'theory' ? 'text-blue-400' :
-                            activeTab === 'practice' ? 'text-emerald-400' : 'text-rose-400'
-                            }`}>
-                            {activeTab === 'theory' ? '📚 Теория' :
-                                activeTab === 'practice' ? '💻 Практика' : '🧠 Quiz'}
-                        </span>
+                <div className="bg-gray-950 border-b border-gray-800/50 px-4 md:px-12 py-2 flex items-center justify-between text-xs overflow-x-auto whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                        {/* Hamburger for mobile map */}
+                        <button onClick={() => setMapCollapsed(false)} className="md:hidden mr-2 p-1 text-gray-400 hover:text-white bg-gray-800 rounded">
+                            <span className="text-sm">🗺️</span>
+                        </button>
+                        {/* Breadcrumb */}
+                        <div className="flex items-center gap-2 text-gray-500">
+                            <span className="hover:text-gray-300 cursor-default">{topic}</span>
+                            <span className="text-gray-700">›</span>
+                            <span className="text-blue-400 font-medium">День {activeNode.day}</span>
+                            <span className="text-gray-700">›</span>
+                            <span className={`font-medium ${activeTab === 'theory' ? 'text-blue-400' :
+                                activeTab === 'practice' ? 'text-emerald-400' : 'text-rose-400'
+                                }`}>
+                                {activeTab === 'theory' ? '📚 Теория' :
+                                    activeTab === 'practice' ? '💻 Практика' : '🧠 Quiz'}
+                            </span>
+                        </div>
                     </div>
                     {/* Mini Stats */}
                     <div className="flex items-center gap-4 text-gray-500">
@@ -163,13 +172,13 @@ export const LearningDashboard: React.FC<LearningDashboardProps> = ({ topic, nod
                 </div>
 
                 {/* Заголовок текущего узла и Навигация табов */}
-                <div className="pt-8 px-12 pb-0 border-b border-gray-800 bg-gray-900 sticky top-0 z-10 w-full shadow-sm">
-                    <div className="flex items-center gap-4 mb-6 animate-fade-in">
-                        <span className="bg-blue-500/20 text-blue-400 font-bold px-3 py-1.5 rounded-lg text-sm uppercase tracking-wider">День {activeNode.day}</span>
-                        <h2 className="text-3xl font-extrabold text-white">{activeNode.title}</h2>
+                <div className="pt-6 md:pt-8 px-4 md:px-12 pb-0 border-b border-gray-800 bg-gray-900 sticky top-0 z-10 w-full shadow-sm">
+                    <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mb-4 md:mb-6 animate-fade-in">
+                        <span className="bg-blue-500/20 text-blue-400 font-bold px-3 py-1.5 rounded-lg text-xs md:text-sm uppercase tracking-wider w-fit">День {activeNode.day}</span>
+                        <h2 className="text-2xl md:text-3xl font-extrabold text-white">{activeNode.title}</h2>
                     </div>
 
-                    <div className="flex gap-10">
+                    <div className="flex gap-6 md:gap-10 overflow-x-auto whitespace-nowrap scrollbar-hide">
                         <button
                             onClick={() => setActiveTab('theory')}
                             className={`pb-4 font-semibold text-lg transition-all relative flex items-center gap-2 ${activeTab === 'theory' ? 'text-blue-400' : 'text-gray-400 hover:text-gray-200'}`}
@@ -198,14 +207,14 @@ export const LearningDashboard: React.FC<LearningDashboardProps> = ({ topic, nod
                 </div>
 
                 {/* Контент активного таба */}
-                <div className="flex-1 overflow-y-auto p-12 bg-[#0b1120]"> {/* Немного более глубокий фон для контента */}
+                <div className="flex-1 overflow-y-auto p-4 md:p-12 bg-[#0b1120]"> {/* Немного более глубокий фон для контента */}
                     {activeTab === 'theory' && (
-                        <div className="max-w-7xl mx-auto space-y-6 pb-16">
+                        <div className="max-w-7xl mx-auto space-y-4 md:space-y-6 pb-16">
 
                             {/* 1. Narrative Hook — collapsible */}
                             <details open className="group animate-fade-in-up">
                                 <summary className="cursor-pointer list-none">
-                                    <div className="p-6 bg-gradient-to-br from-indigo-900/50 to-purple-900/40 rounded-2xl border border-indigo-700/40 shadow-lg relative overflow-hidden card-hover">
+                                    <div className="p-4 md:p-6 bg-gradient-to-br from-indigo-900/50 to-purple-900/40 rounded-2xl border border-indigo-700/40 shadow-lg relative overflow-hidden card-hover">
                                         <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
                                         <h3 className="text-lg font-bold text-indigo-300 flex items-center gap-3">
                                             <span className="text-xl">🎭</span> Зачем это нужно?

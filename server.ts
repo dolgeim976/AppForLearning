@@ -198,7 +198,7 @@ Include exactly 3 to 5 questions in active_recall_questions. Ensure code_snippet
 Do NOT wrap the output in markdown backticks. Return raw JSON.`;
 }
 
-async function callOpenRouter(messages: any[], model: string = "anthropic/claude-3.5-sonnet"): Promise<string> {
+async function callOpenRouter(messages: any[], model: string = "openai/gpt-4o-mini"): Promise<string> {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -239,7 +239,7 @@ app.post('/api/llm/generate', async (req, res) => {
         ];
 
         console.log(`[Backend] \t➔ Fetching Outline...`);
-        let outlineRaw = await callOpenRouter(outlineMessages, "anthropic/claude-3.5-sonnet");
+        let outlineRaw = await callOpenRouter(outlineMessages, "openai/gpt-4o-mini");
         outlineRaw = sanitizeLLMJson(outlineRaw);
 
         let outlineData;
@@ -271,7 +271,7 @@ app.post('/api/llm/generate', async (req, res) => {
             ];
 
             try {
-                let nodeContent = await callOpenRouter(messages, "anthropic/claude-3.5-sonnet");
+                let nodeContent = await callOpenRouter(messages, "openai/gpt-4o-mini");
                 nodeContent = sanitizeLLMJson(nodeContent);
                 let parsedNode = repairAndParse(nodeContent);
 

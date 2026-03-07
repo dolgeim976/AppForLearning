@@ -82,21 +82,21 @@ function App() {
     const activeTrack = tracks.find(t => t.id === activeTrackId);
 
     return (
-        <div className="flex h-screen w-full bg-[#0b1120] text-white font-sans overflow-hidden">
+        <div className="flex h-[100dvh] w-full bg-[#0b1120] text-white font-sans overflow-hidden">
 
             {/* Мобильная подложка (Overlay) для закрытия сайдбара по клику вне его */}
             {!sidebarCollapsed && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-20 md:hidden"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
                     onClick={() => setSidebarCollapsed(true)}
                 />
             )}
 
             {/* ШАГ 1: Левый сайдбар со списком всех треков */}
             <div className={`
-                ${sidebarCollapsed ? '-translate-x-full md:translate-x-0 w-0 md:w-14 shrink-0' : 'translate-x-0 w-64 shrink-0'} 
+                ${sidebarCollapsed ? '-translate-x-full md:translate-x-0 w-0 md:w-14 shrink-0' : 'translate-x-0 w-72 md:w-64 shrink-0'} 
                 absolute md:static inset-y-0 left-0 
-                h-full border-r border-gray-800 bg-gray-950 flex flex-col z-30 shadow-2xl transition-all duration-300
+                h-full border-r border-gray-800 bg-gray-950 flex flex-col z-50 shadow-2xl transition-all duration-300
             `}>
                 <div className="p-3 border-b border-gray-800 flex items-center justify-between">
                     {!sidebarCollapsed && (
@@ -132,7 +132,7 @@ function App() {
                                         <span className="truncate font-medium text-sm pr-2">{track.topic}</span>
                                         <button
                                             onClick={(e) => handleDeleteTrack(track.id!, e)}
-                                            className={`p-1.5 rounded-lg text-gray-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 ${activeTrackId === track.id ? 'opacity-100' : ''}`}
+                                            className={`p-1.5 rounded-lg text-gray-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 md:group-hover:opacity-100 ${activeTrackId === track.id ? 'opacity-100' : 'opacity-100 md:opacity-0'}`}
                                             title="Удалить трек"
                                         >
                                             <Trash2 className="w-4 h-4" />
@@ -175,7 +175,7 @@ function App() {
             {sidebarCollapsed && (
                 <button
                     onClick={() => setSidebarCollapsed(false)}
-                    className="md:hidden absolute top-4 left-4 z-10 p-2 bg-gray-800/80 backdrop-blur text-white rounded-lg shadow-lg border border-gray-700"
+                    className="md:hidden absolute top-4 left-4 z-30 p-2.5 bg-gray-900/90 backdrop-blur text-white rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-gray-700"
                 >
                     <Library className="w-5 h-5" />
                 </button>
@@ -189,8 +189,8 @@ function App() {
                     <LearningDashboard key={activeTrack.id} topic={activeTrack.topic} nodes={activeTrack.roadmap_nodes} />
                 ) : (
                     // Инпут для создания нового топика
-                    <div className="h-full flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
-                        <div className="max-w-xl w-full">
+                    <div className="h-[100dvh] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500 overflow-y-auto">
+                        <div className="max-w-xl w-full pt-12 md:pt-0">
                             <div className="flex justify-center mb-6">
                                 <BookOpen className="w-16 h-16 text-blue-500 animate-pulse" />
                             </div>
@@ -199,24 +199,24 @@ function App() {
                                 AI Learning Center
                             </h1>
 
-                            <p className="text-gray-400 mb-10 text-lg">
+                            <p className="text-gray-400 mb-10 text-base md:text-lg">
                                 Введите любую тему (например, Garbage Collector in Java, Docker & K8s, Git Flow).
                             </p>
 
-                            <form onSubmit={handleGenerate} className="flex gap-2">
+                            <form onSubmit={handleGenerate} className="flex flex-col sm:flex-row gap-3">
                                 <input
                                     type="text"
-                                    placeholder="Например: Node.js Streams, React Hooks, Linux Basics..."
+                                    placeholder="Docker Basics, React Hooks..."
                                     value={topic}
                                     onChange={(e) => setTopic(e.target.value)}
                                     disabled={loading}
                                     autoFocus
-                                    className="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-5 py-4 text-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-white placeholder-gray-600 shadow-inner"
+                                    className="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-5 py-4 text-base md:text-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-white placeholder-gray-600 shadow-inner"
                                 />
                                 <button
                                     type="submit"
                                     disabled={loading || !topic.trim()}
-                                    className="bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-bold rounded-xl px-8 flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/20"
+                                    className="bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-bold rounded-xl py-4 sm:py-0 px-8 flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/20"
                                 >
                                     {loading ? (
                                         <Loader2 className="w-6 h-6 animate-spin" />
