@@ -68,10 +68,53 @@ export const LearningDashboard: React.FC<LearningDashboardProps> = ({ topic, nod
 
     const activeNodeId = activeNode.id || `node_${nodes.indexOf(activeNode)}`;
 
-    return (
-        <div className="flex h-full w-full bg-gray-900 text-white font-sans overflow-hidden">
+    // -------------- Keyboard Shortcuts --------------
+    React.useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (activeTab !== 'quiz') return;
+            const questions = activeNode.active_recall_questions || [];
 
-            {/* 1. ЛЕВАЯ ПАНЕЛЬ: Knowledge Map */}
+            if (quizFinished) {
+                if (e.key === 'Enter') {
+                    setQuizCardIndex(0); setQuizCardRevealed(false); setQuizFinished(false); setUserAnswers({});
+                }
+                return;
+            }
+
+            if (!quizCardRevealed) {
+                // Numeric selection 1-4
+                const numKey = parseInt(e.key);
+                const q = questions[quizCardIndex];
+                if (!isNaN(numKey) && Array.isArray(q?.options) && numKey >= 1 && numKey <= q.options.length) {
+                    setUserAnswers(prev => ({ ...prev, [quizCardIndex]: q.options[numKey - 1] }));
+                }
+
+                // Enter to submit
+                if (e.key === 'Enter' && userAnswers[quizCardIndex]) {
+                    setQuizCardRevealed(true);
+                }
+            } else {
+                // Enter to go to next
+                if (e.key === 'Enter') {
+                    if (quizCardIndex + 1 >= questions.length) {
+                        setQuizFinished(true);
+                    } else {
+                        setQuizCardIndex(prev => prev + 1);
+                        setQuizCardRevealed(false);
+                    }
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [activeTab, quizFinished, quizCardIndex, quizCardRevealed, userAnswers, activeNode.active_recall_questions]);
+    // --------------------------------------------------------------------------------
+
+    return (
+        <div className="flex h-full w-full bg-[#0b1120] text-gray-200 overflow-hidden font-sans min-w-0">
+
+            {/* 1. БОКОВАЯ ПАНЕЛЬ С КАРТОЙ */}
             <div className={`h-full absolute md:static inset-y-0 left-0 z-30 border-r border-gray-800 flex flex-col bg-gray-950 shadow-2xl transition-all duration-300 ${mapCollapsed ? '-translate-x-full md:translate-x-0 w-0 md:w-12 min-w-0 max-w-none shrink-0' : 'translate-x-0 w-full md:w-1/4 md:min-w-[300px] md:max-w-[400px] shrink-0'}`}>
                 {mapCollapsed ? (
                     <button
@@ -136,10 +179,10 @@ export const LearningDashboard: React.FC<LearningDashboardProps> = ({ topic, nod
             </div>
 
             {/* 2. ОСНОВНАЯ ПАНЕЛЬ С ВКЛАДКАМИ */}
-            <div className="flex-1 h-full flex flex-col bg-gray-900 relative">
+            <div className="flex-1 h-full flex flex-col bg-gray-900 relative min-w-0">
 
                 {/* Persistent Status Micro-Bar */}
-                <div className="bg-gray-950 border-b border-gray-800/50 px-4 md:px-12 py-2 flex items-center justify-between text-xs overflow-x-auto whitespace-nowrap">
+                <div className="bg-gray-950 border-b border-gray-800/50 px-4 md:px-12 py-2 flex items-center justify-between text-xs overflow-x-auto whitespace-nowrap min-w-0">
                     <div className="flex items-center gap-2">
                         {/* Hamburger for mobile map */}
                         <button onClick={() => setMapCollapsed(false)} className="md:hidden mr-2 p-1 text-gray-400 hover:text-white bg-gray-800 rounded">
@@ -406,17 +449,6 @@ export const LearningDashboard: React.FC<LearningDashboardProps> = ({ topic, nod
                             const correctCount = Object.entries(userAnswers).filter(([i, ans]) => ans === questions[parseInt(i)]?.correct_answer).length;
                             const accuracy = questions.length > 0 ? Math.round((correctCount / questions.length) * 100) : 0;
 
-                            // Keyboard support to restart
-                            React.useEffect(() => {
-                                const handleKeyDown = (e: KeyboardEvent) => {
-                                    if (e.key === 'Enter') {
-                                        setQuizCardIndex(0); setQuizCardRevealed(false); setQuizFinished(false); setUserAnswers({});
-                                    }
-                                };
-                                window.addEventListener('keydown', handleKeyDown);
-                                return () => window.removeEventListener('keydown', handleKeyDown);
-                            }, []);
-
                             return (
                                 <div className="max-w-5xl mx-auto py-16 text-center animate-scale-pop">
                                     <div className="text-7xl mb-6">{accuracy >= 80 ? '🏆' : accuracy >= 50 ? '👍' : '💪'}</div>
@@ -477,38 +509,6 @@ export const LearningDashboard: React.FC<LearningDashboardProps> = ({ topic, nod
                         const tc = typeConfig[qType] || typeConfig.multiple_choice;
                         const selectedAnswer = userAnswers[quizCardIndex];
                         const isCorrect = quizCardRevealed && selectedAnswer === q.correct_answer;
-
-                        // Keyboard Support for active question
-                        React.useEffect(() => {
-                            const handleKeyDown = (e: KeyboardEvent) => {
-                                // Prevent default scrolling for space/arrows if needed, but here we just listen
-                                if (!quizCardRevealed) {
-                                    // Numeric selection 1-4 (or more depending on options length)
-                                    const numKey = parseInt(e.key);
-                                    if (!isNaN(numKey) && Array.isArray(q?.options) && numKey >= 1 && numKey <= q.options.length) {
-                                        setUserAnswers(prev => ({ ...prev, [quizCardIndex]: q.options[numKey - 1] }));
-                                    }
-
-                                    // Enter to submit
-                                    if (e.key === 'Enter' && selectedAnswer) {
-                                        setQuizCardRevealed(true);
-                                    }
-                                } else {
-                                    // Enter to go to next
-                                    if (e.key === 'Enter') {
-                                        if (quizCardIndex + 1 >= questions.length) {
-                                            setQuizFinished(true);
-                                        } else {
-                                            setQuizCardIndex(prev => prev + 1);
-                                            setQuizCardRevealed(false);
-                                        }
-                                    }
-                                }
-                            };
-
-                            window.addEventListener('keydown', handleKeyDown);
-                            return () => window.removeEventListener('keydown', handleKeyDown);
-                        }, [quizCardIndex, quizCardRevealed, selectedAnswer, q.options]);
 
                         return (
                             <div className="max-w-5xl mx-auto py-8 animate-fade-in">

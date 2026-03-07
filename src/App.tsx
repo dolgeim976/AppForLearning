@@ -82,7 +82,7 @@ function App() {
     const activeTrack = tracks.find(t => t.id === activeTrackId);
 
     return (
-        <div className="flex h-[100dvh] w-full bg-[#0b1120] text-white font-sans overflow-hidden">
+        <div className="flex h-[100dvh] w-full bg-[#0b1120] text-white font-sans overflow-hidden min-w-0">
 
             {/* Мобильная подложка (Overlay) для закрытия сайдбара по клику вне его */}
             {!sidebarCollapsed && (
