@@ -12,7 +12,7 @@ export const FastConsolidationSchema = z.object({
     expected_exact_answer: z.string().optional(),
     bug_line: z.number().optional(),
     bug_explanation: z.string().optional(),
-    explanation_on_fail: z.string()
+    explanation_on_fail: z.string().optional()
 });
 
 export const MicroLoopSchema = z.object({

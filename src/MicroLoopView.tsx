@@ -140,7 +140,7 @@ export const MicroLoopView: React.FC<{ loop: MicroLoop; index: number }> = ({ lo
                                     </h4>
                                     {!isCorrect && (
                                         <p className="text-gray-300 leading-relaxed text-base">
-                                            {fc.explanation_on_fail}
+                                            {fc.explanation_on_fail || fc.bug_explanation}
                                         </p>
                                     )}
                                     {isCorrect && isSpotBug && fc.bug_explanation && (
