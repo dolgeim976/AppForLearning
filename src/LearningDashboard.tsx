@@ -441,7 +441,25 @@ export const LearningDashboard: React.FC<LearningDashboardProps> = ({ topic, nod
                         }
 
                         const q = questions[quizCardIndex];
-                        const qType = q?.type || 'multiple_choice';
+
+                        if (!q || !Array.isArray(q.options)) {
+                            return (
+                                <div className="text-center py-20 text-gray-500">
+                                    <p className="mb-4 text-rose-400">⚠️ Данные вопроса повреждены. Это старый кэш.</p>
+                                    <button
+                                        onClick={() => {
+                                            if (quizCardIndex + 1 >= questions.length) setQuizFinished(true);
+                                            else setQuizCardIndex(prev => prev + 1);
+                                        }}
+                                        className="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded text-sm transition-colors"
+                                    >
+                                        Пропустить вопрос
+                                    </button>
+                                </div>
+                            );
+                        }
+
+                        const qType = q.type || 'multiple_choice';
                         const typeConfig: Record<string, { icon: string; label: string; borderColor: string; bgColor: string; textColor: string }> = {
                             multiple_choice: { icon: '📝', label: 'Теория', borderColor: 'border-blue-500/50', bgColor: 'bg-blue-500/10', textColor: 'text-blue-300' },
                             predict_output: { icon: '🖥️', label: 'Предскажи вывод', borderColor: 'border-violet-500/50', bgColor: 'bg-violet-500/10', textColor: 'text-violet-300' },
@@ -458,7 +476,7 @@ export const LearningDashboard: React.FC<LearningDashboardProps> = ({ topic, nod
                                 if (!quizCardRevealed) {
                                     // Numeric selection 1-4 (or more depending on options length)
                                     const numKey = parseInt(e.key);
-                                    if (!isNaN(numKey) && numKey >= 1 && numKey <= q.options.length) {
+                                    if (!isNaN(numKey) && Array.isArray(q?.options) && numKey >= 1 && numKey <= q.options.length) {
                                         setUserAnswers(prev => ({ ...prev, [quizCardIndex]: q.options[numKey - 1] }));
                                     }
 
