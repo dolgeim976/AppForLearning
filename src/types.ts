@@ -29,11 +29,6 @@ export const FinalBossPracticeSchema = z.object({
     distractors: z.array(z.string())
 });
 
-export const SpacedRepetitionMetadataSchema = z.object({
-    keywords: z.array(z.string()),
-    review_prompts: z.array(z.string())
-});
-
 export const RoadmapNodeSchema = z.object({
     id: z.string().optional(),
     title: z.string(),
@@ -46,8 +41,7 @@ export const RoadmapNodeSchema = z.object({
         mission: "Practice task",
         correct_sequence: [],
         distractors: []
-    }),
-    spaced_repetition_metadata: SpacedRepetitionMetadataSchema.optional().default({ keywords: [], review_prompts: [] })
+    })
 });
 
 export const TrackRoadmapSchema = z.object({

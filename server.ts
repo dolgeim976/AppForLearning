@@ -155,12 +155,13 @@ function repairAndParse(text: string): any {
 }
 
 const OUTLINE_PROMPT = `You are an expert Technical Curriculum Designer.
-Your task is to break down the provided topic into a list of 3 to 6 core sequential subtopics that form a complete learning path. 
-ALL GENERATED TEXT (topic headers, descriptions) MUST BE WRITTEN IN RUSSIAN.
+Your task is to break down the provided topic into a list of 1 to 4 core sequential subtopics that form a complete learning path. 
+For simple or narrow topics, use only 1 or 2 subtopics to avoid repetition.
+ALL GENERATED TEXT MUST BE WRITTEN IN RUSSIAN.
 Return ONLY a valid JSON object with the following structure:
 {
     "topic": "The confirmed topic name (in Russian)",
-    "subtopics": ["Subtopic 1 (in Russian)", "Subtopic 2 (in Russian)", "Subtopic 3 (in Russian)"]
+    "subtopics": ["Subtopic 1 (in Russian)", "Subtopic 2 (in Russian)"]
 }
 Do NOT wrap the output in markdown backticks. Return raw JSON.`;
 
@@ -176,12 +177,12 @@ Return ONLY a valid JSON object matching this EXACT structure. Use rich Markdown
   "topic": "Название темы",
   "narrative_hook": {
     "title": "Зачем это нужно?",
-    "analogy": "A real-world analogy in Russian connecting this concept to something familiar."
+    "analogy": "Простая аналогия из реальной жизни на русском языке."
   },
   "micro_loops": [
     {
-      "loop_id": "concept_1_identifier",
-      "theory_chunk": "A focused, bite-sized explanation of a SINGLE concept in Russian (2-3 paragraphs max).",
+      "loop_id": "Краткое название концепта (например, 'Создание объекта')",
+      "theory_chunk": "Объяснение одного концепта без лишней воды (2-3 абзаца).",
       "syntax_snippet": "A concise code snippet illustrating the concept if applicable (or empty string)",
       "fast_consolidation": {
         "type": "predict_output",
@@ -192,7 +193,7 @@ Return ONLY a valid JSON object matching this EXACT structure. Use rich Markdown
       }
     },
     {
-      "loop_id": "concept_2_identifier",
+      "loop_id": "Краткое название концепта 2",
       "theory_chunk": "Explanation of the next concept.",
       "syntax_snippet": "Target code",
       "fast_consolidation": {
@@ -216,16 +217,10 @@ Return ONLY a valid JSON object matching this EXACT structure. Use rich Markdown
       "Distractor code line 1",
       "Distractor code line 2"
     ]
-  },
-  "spaced_repetition_metadata": {
-    "keywords": ["Keyword 1", "Keyword 2"],
-    "review_prompts": [
-      "A question to prompt active recall later."
-    ]
   }
 }
 
-Include 2 to 4 micro_loops in the array, making sure at least one is 'predict_output' and one is 'spot_the_bug'.`;
+Include 1 to 4 micro_loops in the array, depending on the complexity of the topic to prevent repetition.`;
 }
 
 async function callOpenRouter(messages: any[], model: string = "openai/gpt-4o-mini"): Promise<string> {
@@ -286,8 +281,8 @@ app.post('/api/llm/generate', async (req, res) => {
         }
 
         const subtopics = Array.isArray(outlineData.subtopics) && outlineData.subtopics.length > 0
-            ? outlineData.subtopics.slice(0, 6)
-            : ["Core Concepts", "Implementation", "Best Practices"];
+            ? outlineData.subtopics.slice(0, 4)
+            : ["Основы", "Практическое применение"];
 
         console.log(`[Backend] \t➔ Outline generated: [${subtopics.join(', ')}]`);
         console.log(`[Backend] \t➔ Dispatching ${subtopics.length} parallel requests...`);

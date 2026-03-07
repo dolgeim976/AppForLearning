@@ -1,10 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { LearningDashboard } from './LearningDashboard';
 import { AiTrackService } from './AiTrackService';
 import { TrackRoadmap } from './types';
-import { BookOpen, Sparkles, Loader2, Plus, Trash2, Library, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
-import { SRSEngine } from './SRSEngine';
-import { ReviewSession } from './ReviewSession';
+import { BookOpen, Sparkles, Loader2, Plus, Trash2, Library, ChevronLeft, ChevronRight } from 'lucide-react';
 
 function App() {
     const [tracks, setTracks] = useState<TrackRoadmap[]>([]);
@@ -13,14 +11,7 @@ function App() {
     const [topic, setTopic] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [showReview, setShowReview] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
-    // SRS Engine (singleton)
-    const srsEngine = useMemo(() => new SRSEngine(), []);
-    const [srsStats, setSrsStats] = useState(() => new SRSEngine().getStats());
-
-    const refreshSrsStats = () => setSrsStats(srsEngine.getStats());
 
     useEffect(() => {
         const savedTracks = localStorage.getItem('ai_learning_tracks');
@@ -56,11 +47,6 @@ function App() {
             setTracks(prev => [newTrack, ...prev]);
             setActiveTrackId(newTrack.id);
             setTopic('');
-
-            // Auto-import quiz questions into SRS
-            const imported = srsEngine.importFromTrack(newTrack.id!, newTrack.topic, newTrack.roadmap_nodes);
-            console.log(`[SRS] Imported ${imported} cards from track`);
-            refreshSrsStats();
         } catch (err: any) {
             setError(err.message || 'Ошибка генерации трека');
         } finally {
@@ -143,25 +129,11 @@ function App() {
                         </div>
 
                         <div className="p-4 border-t border-gray-800 space-y-2">
-                            {/* SRS Review Button */}
-                            <button
-                                onClick={() => { setShowReview(true); refreshSrsStats(); setSidebarCollapsed(true); }}
-                                className={`w-full py-3 px-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg relative
-                                    ${showReview ? 'bg-purple-600 text-white shadow-purple-500/20' : 'bg-gradient-to-r from-purple-900/50 to-indigo-900/50 text-purple-300 border border-purple-700/30 hover:from-purple-800/50 hover:to-indigo-800/50'}`}
-                            >
-                                <RefreshCw className="w-4 h-4" />
-                                Повторение
-                                {srsStats.due > 0 && (
-                                    <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shadow-lg animate-pulse">
-                                        {srsStats.due}
-                                    </span>
-                                )}
-                            </button>
 
                             <button
-                                onClick={() => { setActiveTrackId(null); setShowReview(false); setSidebarCollapsed(true); }}
+                                onClick={() => { setActiveTrackId(null); setSidebarCollapsed(true); }}
                                 className={`w-full py-3 px-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg
-                                    ${!activeTrackId && !showReview ? 'bg-blue-600 text-white shadow-blue-500/20' : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                                    ${!activeTrackId ? 'bg-blue-600 text-white shadow-blue-500/20' : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white'}`}
                             >
                                 <Plus className="w-5 h-5" />
                                 Новый Трек
@@ -183,9 +155,7 @@ function App() {
 
             {/* ШАГ 2: Основная контентная часть */}
             <div className="flex-1 h-full relative">
-                {showReview ? (
-                    <ReviewSession srsEngine={srsEngine} onClose={() => { setShowReview(false); refreshSrsStats(); }} />
-                ) : activeTrack ? (
+                {activeTrack ? (
                     <LearningDashboard key={activeTrack.id} topic={activeTrack.topic} nodes={activeTrack.roadmap_nodes} />
                 ) : (
                     // Инпут для создания нового топика
