@@ -168,11 +168,15 @@ function getNodePrompt(topic: string, subtopic: string): string {
 Return ONLY a valid JSON object matching this EXACT structure. Provide extensive detail in detailed_theory using rich Markdown.
 {
     "title": "${subtopic}",
+    "day": 1,
+    "narrative_hook": "A short, engaging hook.",
+    "analogy": "A real-world analogy to explain the concept without code.",
     "detailed_theory": "A massive, deep explanation of this concept using beautiful markdown formatting (headers, bold, lists). Do not be brief.",
-    "practical_examples": [
-        "Write detailed markdown containing code block demonstrating the concept. Explain the code."
-    ],
-    "practice_task_description": "A single comprehensive hands-on coding challenge or task scenario formatted in markdown.",
+    "common_pitfalls": "Common mistakes beginners make with this topic.",
+    "practical_examples": "Write a detailed markdown containing multiple code blocks demonstrating the concept. Explain the code. MUST be a string, not an array.",
+    "practice_type": "algorithmic",
+    "practice_difficulty": "medium",
+    "practice_task": "A single comprehensive hands-on coding challenge or task scenario formatted in markdown.",
     "practice_requirements": ["Requirement 1", "Requirement 2"],
     "practice_hints": ["Hint 1"],
     "initial_code": "Starter code snippet (string)",
@@ -181,13 +185,14 @@ Return ONLY a valid JSON object matching this EXACT structure. Provide extensive
         {
             "type": "multiple_choice",
             "question": "A specific multiple-choice question testing understanding.",
+            "code_snippet": "Optional code context related to the question. If none, pass an empty string.",
             "options": ["Option A", "Option B", "Option C", "Option D"],
-            "correct_answer": "Option A (must exactly match one option)",
-            "code_snippet": "Optional code context related to the question"
+            "correct_answer": "Option A (must exactly match one option)"
         }
-    ]
+    ],
+    "interleaving_tasks": "How does this connect to previous topics?"
 }
-Include exactly 3 to 5 questions in active_recall_questions.
+Include exactly 3 to 5 questions in active_recall_questions. Ensure code_snippet is a string for EVERY question. 
 Do NOT wrap the output in markdown backticks. Return raw JSON.`;
 }
 
@@ -268,6 +273,16 @@ app.post('/api/llm/generate', async (req, res) => {
                 nodeContent = sanitizeLLMJson(nodeContent);
                 let parsedNode = repairAndParse(nodeContent);
 
+                // Ensure `day` exists
+                if (!parsedNode.day) parsedNode.day = index + 1;
+
+                // Enforce practical_examples as string
+                if (Array.isArray(parsedNode.practical_examples)) {
+                    parsedNode.practical_examples = parsedNode.practical_examples.join('\n\n');
+                } else if (typeof parsedNode.practical_examples !== 'string') {
+                    parsedNode.practical_examples = "";
+                }
+
                 // Sanitize active_recall_questions
                 if (parsedNode.active_recall_questions && Array.isArray(parsedNode.active_recall_questions)) {
                     parsedNode.active_recall_questions = parsedNode.active_recall_questions.filter((q: any) => {
@@ -277,14 +292,17 @@ app.post('/api/llm/generate', async (req, res) => {
                         }
                         if (!Array.isArray(q.options) || q.options.length < 2) return false;
                         if (!q.correct_answer) q.correct_answer = q.options[0] || '';
+
+                        // Enforce code_snippet as string
+                        if (typeof q.code_snippet !== 'string') q.code_snippet = "";
+
                         return true;
                     });
                 }
 
-                // Ensure arrays
-                if (parsedNode.practice_requirements && !Array.isArray(parsedNode.practice_requirements)) parsedNode.practice_requirements = [];
-                if (parsedNode.practice_hints && !Array.isArray(parsedNode.practice_hints)) parsedNode.practice_hints = [];
-                if (parsedNode.practical_examples && !Array.isArray(parsedNode.practical_examples)) parsedNode.practical_examples = [];
+                // Ensure array fields exist
+                if (!Array.isArray(parsedNode.practice_requirements)) parsedNode.practice_requirements = [];
+                if (!Array.isArray(parsedNode.practice_hints)) parsedNode.practice_hints = [];
 
                 console.log(`[Backend] \t\t🟢 Node ${index + 1}/${subtopics.length} completed: ${subtopic}`);
                 return parsedNode;
