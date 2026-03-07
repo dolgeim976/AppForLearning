@@ -308,33 +308,8 @@ app.post('/api/llm/generate', async (req, res) => {
                 // Ensure `day` exists
                 if (!parsedNode.day) parsedNode.day = index + 1;
 
-                // Enforce practical_examples as string
-                if (Array.isArray(parsedNode.practical_examples)) {
-                    parsedNode.practical_examples = parsedNode.practical_examples.join('\n\n');
-                } else if (typeof parsedNode.practical_examples !== 'string') {
-                    parsedNode.practical_examples = "";
-                }
-
-                // Sanitize active_recall_questions
-                if (parsedNode.active_recall_questions && Array.isArray(parsedNode.active_recall_questions)) {
-                    parsedNode.active_recall_questions = parsedNode.active_recall_questions.filter((q: any) => {
-                        if (!q || !q.question) return false;
-                        if (typeof q.options === 'string') {
-                            q.options = q.options.split(/[,;]/).map((s: string) => s.trim()).filter(Boolean);
-                        }
-                        if (!Array.isArray(q.options) || q.options.length < 2) return false;
-                        if (!q.correct_answer) q.correct_answer = q.options[0] || '';
-
-                        // Enforce code_snippet as string
-                        if (typeof q.code_snippet !== 'string') q.code_snippet = "";
-
-                        return true;
-                    });
-                }
-
-                // Ensure array fields exist
-                if (!Array.isArray(parsedNode.practice_requirements)) parsedNode.practice_requirements = [];
-                if (!Array.isArray(parsedNode.practice_hints)) parsedNode.practice_hints = [];
+                // Ensure arrays exist for micro_loops just in case
+                if (!Array.isArray(parsedNode.micro_loops)) parsedNode.micro_loops = [];
 
                 console.log(`[Backend] \t\t🟢 Node ${index + 1}/${subtopics.length} completed: ${subtopic}`);
                 return parsedNode;
@@ -347,7 +322,7 @@ app.post('/api/llm/generate', async (req, res) => {
         const parallelResults = await Promise.all(nodePromises);
 
         // Filter out any failed nodes
-        const successfulNodes = parallelResults.filter(node => node && node.title && node.detailed_theory);
+        const successfulNodes = parallelResults.filter(node => node && node.title && Array.isArray(node.micro_loops));
 
         if (successfulNodes.length === 0) {
             throw new Error('All parallel node generations failed.');
