@@ -202,7 +202,11 @@ async function callOpenRouter(messages: any[], model: string = "google/gemini-2.
             "model": model,
             "messages": messages,
             "max_tokens": 8000,
-            "temperature": 0.4
+            "temperature": 0.4,
+            "provider": {
+                "ignore": ["Google AI Studio"],
+                "allow_fallbacks": true
+            }
         })
     });
 
