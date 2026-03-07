@@ -167,6 +167,7 @@ Do NOT wrap the output in markdown backticks. Return raw JSON.`;
 function getNodePrompt(topic: string, subtopic: string): string {
     return `You are a Senior Technical Instructor. You are writing exhaustive, high-quality content for the subtopic "${subtopic}", which belongs to the overarching topic "${topic}".
 ALL TEXT CONTENT, THEORY, INSTRUCTIONS, QUESTIONS AND CODE COMMENTS MUST BE WRITTEN STRICTLY IN RUSSIAN.
+IMPORTANT: Do NOT translate the values for "practice_type", "practice_difficulty", or "type". They MUST remain exact English enums ('algorithmic' | 'debugging' | 'replication', 'easy' | 'medium' | 'hard', 'multiple_choice' | 'predict_output' | 'spot_bug').
 Return ONLY a valid JSON object matching this EXACT structure. Provide extensive detail in detailed_theory using rich Markdown.
 {
     "title": "Название подтемы на русском",
